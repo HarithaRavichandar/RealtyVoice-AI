@@ -30,3 +30,6 @@ def db_health(db=Depends(get_db)):
             detail="Database connection failed",
         ) from exc
 
+
+from .orchestrator.router import router as orchestrator_router
+app.include_router(orchestrator_router, prefix="/api")
