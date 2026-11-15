@@ -39,8 +39,18 @@ class PropertySearchService:
         engine.
     """
 
-    def __init__(self, session_factory: Callable[[], Session] = SessionLocal) -> None:
+    def __init__(self, session_factory: Callable[[], Session] = SessionLocal, close_session: bool = True) -> None:
+        """Create a PropertySearchService.
+
+        Parameters
+        ----------
+        session_factory: Callable that returns a new Session (defaults to ``SessionLocal``).
+        close_session: If ``True`` (default) the service will close the Session it creates.
+                       Callers that provide their own Session and want to keep it open
+                       should pass ``close_session=False``.
+        """
         self.session_factory = session_factory
+        self.close_session = close_session
 
     # ---------------------------------------------------------------------
     # Helper methods – price interval calculations
@@ -186,7 +196,8 @@ class PropertySearchService:
             results = session.execute(stmt).scalars().all()
             return total, results
         finally:
-            session.close()
+            if self.close_session:
+                session.close()
 
     def get_by_id(self, property_id: int) -> Optional[Property]:
         """Return a single ``Property`` by primary key or ``None`` if missing."""
@@ -194,5 +205,6 @@ class PropertySearchService:
         try:
             return session.get(Property, property_id)
         finally:
-            session.close()
+            if self.close_session:
+                session.close()
 

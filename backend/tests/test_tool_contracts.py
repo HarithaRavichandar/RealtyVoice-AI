@@ -5,6 +5,7 @@ only strings, budget ordering) and the simple static lookup helper.
 ''' 
 
 import pytest
+from datetime import date
 from backend.orchestrator.tools.schemas import (
     SearchPropertiesRequest,
     GetPropertyDetailsRequest,
@@ -111,17 +112,80 @@ def test_update_customer_requirements_unknown_field():
 # ---------------------------------------------------------------------------
 
 def test_create_callback_valid():
-    req = CreateCallbackRequest(reason="Please call back.")
+    req = CreateCallbackRequest(
+        preferred_contact="Phone",
+        preferred_date=date(2026, 11, 20),
+        preferred_time="10:30",
+        reason="Please call back.",
+    )
+    assert req.preferred_contact == "Phone"
+    assert req.preferred_date == date(2026, 11, 20)
+    assert req.preferred_time == "10:30"
     assert req.reason == "Please call back."
 
-@pytest.mark.parametrize("bad_reason", ["", "   ", "\n\t"])
-def test_create_callback_invalid_reason(bad_reason):
+def test_create_callback_missing_fields():
+    # Missing preferred_contact
+    with pytest.raises(ValueError, match="Field required"):
+        CreateCallbackRequest(
+            preferred_date=date(2026, 11, 20),
+            preferred_time="10:30",
+            reason="Please call back.",
+        )
+    # Missing preferred_date
+    with pytest.raises(ValueError, match="Field required"):
+        CreateCallbackRequest(
+            preferred_contact="Phone",
+            preferred_time="10:30",
+            reason="Please call back.",
+        )
+    # Missing preferred_time
+    with pytest.raises(ValueError, match="Field required"):
+        CreateCallbackRequest(
+            preferred_contact="Phone",
+            preferred_date=date(2026, 11, 20),
+            reason="Please call back.",
+        )
+    # Missing reason
+    with pytest.raises(ValueError, match="Field required"):
+        CreateCallbackRequest(
+            preferred_contact="Phone",
+            preferred_date=date(2026, 11, 20),
+            preferred_time="10:30",
+        )
+
+@pytest.mark.parametrize("bad_val", ["", "   ", "\n\t"])
+def test_create_callback_whitespace_fields(bad_val):
     with pytest.raises(ValueError, match="value cannot be whitespace only"):
-        CreateCallbackRequest(reason=bad_reason)
+        CreateCallbackRequest(
+            preferred_contact=bad_val,
+            preferred_date=date(2026, 11, 20),
+            preferred_time="10:30",
+            reason="Please call back.",
+        )
+    with pytest.raises(ValueError, match="value cannot be whitespace only"):
+        CreateCallbackRequest(
+            preferred_contact="Phone",
+            preferred_date=date(2026, 11, 20),
+            preferred_time=bad_val,
+            reason="Please call back.",
+        )
+    with pytest.raises(ValueError, match="value cannot be whitespace only"):
+        CreateCallbackRequest(
+            preferred_contact="Phone",
+            preferred_date=date(2026, 11, 20),
+            preferred_time="10:30",
+            reason=bad_val,
+        )
 
 def test_create_callback_unknown_field():
     with pytest.raises(ValueError, match="Extra inputs are not permitted"):
-        CreateCallbackRequest(reason="ok", extra=1)
+        CreateCallbackRequest(
+            preferred_contact="Phone",
+            preferred_date=date(2026, 11, 20),
+            preferred_time="10:30",
+            reason="ok",
+            extra=1,
+        )
 
 # ---------------------------------------------------------------------------
 # Tool registry tests

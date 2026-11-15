@@ -136,11 +136,12 @@ class CreateCallbackRequest(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    preferred_date: Optional[date] = Field(default=None)
-    preferred_time: Optional[str] = Field(default=None)
+    preferred_contact: str = Field(..., description="Preferred contact method")
+    preferred_date: date = Field(..., description="Preferred date for callback")
+    preferred_time: str = Field(..., description="Preferred time for callback")
     reason: str = Field(..., description="User‑provided reason for the callback")
 
-    # Whitespace‑only rejection for ``reason``
+    _contact_ws = field_validator("preferred_contact", mode="before")(_reject_whitespace)
     _reason_ws = field_validator("reason", mode="before")(_reject_whitespace)
     _time_ws = field_validator("preferred_time", mode="before")(_reject_whitespace)
 
