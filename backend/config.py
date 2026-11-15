@@ -32,6 +32,49 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
     # Use SQLite URI format; ensure absolute path
     DATABASE_URL = f"sqlite+pysqlite:///{DB_PATH.as_posix()}"
+# LLM provider configuration
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "groq").strip().lower()
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "").strip()
+GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b").strip()
+GROQ_BASE_URL = os.getenv(
+    "GROQ_BASE_URL",
+    "https://api.groq.com/openai/v1",
+).rstrip("/")
 
-__all__ = ["PROJECT_ROOT", "DATA_DIR", "DB_PATH", "DATABASE_URL"]
+
+def _positive_int_env(name: str, default: int) -> int:
+    """Read a positive integer from an environment variable."""
+    raw_value = os.getenv(name, str(default))
+
+    try:
+        value = int(raw_value)
+    except ValueError as exc:
+        raise ValueError(
+            f"{name} must be a valid integer, got {raw_value!r}"
+        ) from exc
+
+    if value <= 0:
+        raise ValueError(f"{name} must be greater than zero")
+
+    return value
+
+
+GROQ_TIMEOUT_SECONDS = _positive_int_env("GROQ_TIMEOUT_SECONDS", 30)
+AGENT_MAX_TOOL_ITERATIONS = _positive_int_env(
+    "AGENT_MAX_TOOL_ITERATIONS",
+    4,
+)
+
+__all__ = [
+    "PROJECT_ROOT",
+    "DATA_DIR",
+    "DB_PATH",
+    "DATABASE_URL",
+    "LLM_PROVIDER",
+    "GROQ_API_KEY",
+    "GROQ_MODEL",
+    "GROQ_BASE_URL",
+    "GROQ_TIMEOUT_SECONDS",
+    "AGENT_MAX_TOOL_ITERATIONS",
+]
 
