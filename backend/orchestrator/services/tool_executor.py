@@ -1,32 +1,44 @@
+
 # -*- coding: utf-8 -*-
 """
-Tool Executor – Phase 5C Increment 3C (partial implementation)
+Tool Executor – Phase 5C Increment 3D
 
-Implements execution for the two core tools:
+Implements execution for:
 * search_properties
 * get_property_details
+* update_customer_requirements
+* create_callback_request
 
-The executor validates incoming payloads against the request schemas, calls the
-`PropertySearchService` using the caller‑supplied SQLAlchemy session, and
-returns JSON‑serialisable dictionaries. No session commit/rollback/close is
-performed – the caller remains responsible for session lifecycle.
+The executor validates incoming payloads against request schemas and uses
+the caller-supplied SQLAlchemy session.
+
+It does not commit, rollback, or close the session.
+The caller remains responsible for transaction management.
 """
 
 from __future__ import annotations
 
 from typing import Any, Dict, Optional
 
+from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
-# ---------------------------------------------------------------------------
-# Request schemas
-# ---------------------------------------------------------------------------
-from ..tools.schemas import SearchPropertiesRequest, GetPropertyDetailsRequest
+from ..tools.schemas import (
+    SearchPropertiesRequest,
+    GetPropertyDetailsRequest,
+    UpdateCustomerRequirementsRequest,
+    CreateCallbackRequest,
+)
 
-# ---------------------------------------------------------------------------
-# Service and response schemas
-# ---------------------------------------------------------------------------
-from pydantic import ValidationError
+from .conversation import update_temp_requirements
+
+from ...models import (
+    Conversation,
+    Lead,
+    ConsentRecord,
+    CallbackRequest,
+)
+
 from backend.services.property_search import PropertySearchService
 from backend.schemas.property_search import (
     PropertySearchItem,
@@ -40,42 +52,35 @@ def execute_tool(
     payload: Dict[str, Any],
     conversation_id: Optional[int] = None,
 ) -> Dict[str, Any]:
-    """Execute a tool with the supplied SQLAlchemy session.
-
-    Parameters
-    ----------
-    session:
-        Caller‑provided SQLAlchemy Session (must remain open after the call).
-    tool_name:
-        Name of the tool to execute – currently ``search_properties`` or
-        ``get_property_details``.
-    payload:
-        Raw input dictionary supplied by the caller.
-    conversation_id:
-        Accepted for signature compatibility but not used for the two tools.
-
-    Returns
-    -------
-    dict
-        JSON‑serialisable result describing success, or a structured error
-        payload (validation errors, unknown tool, or not‑found).
-    """
+    """Execute a tool using the caller-provided SQLAlchemy session."""
 
     # ---------------------------------------------------------------
     # Resolve the appropriate request schema
     # ---------------------------------------------------------------
     if tool_name == "search_properties":
         Schema = SearchPropertiesRequest
+
     elif tool_name == "get_property_details":
         Schema = GetPropertyDetailsRequest
+
+    elif tool_name == "update_customer_requirements":
+        Schema = UpdateCustomerRequirementsRequest
+
+    elif tool_name == "create_callback_request":
+        Schema = CreateCallbackRequest
+
     else:
-        return {"error": "unknown_tool", "tool": tool_name}
+        return {
+            "error": "unknown_tool",
+            "tool": tool_name,
+        }
 
     # ---------------------------------------------------------------
-    # Validate the payload (Pydantic v2)
+    # Validate the payload
     # ---------------------------------------------------------------
     try:
         request = Schema.model_validate(payload)
+
     except ValidationError as exc:
         return {
             "error": "validation",
@@ -84,41 +89,200 @@ def execute_tool(
         }
 
     # ---------------------------------------------------------------
-    # Service – keep the caller's session alive (close_session=False)
+    # Update customer requirements
+    # ---------------------------------------------------------------
+    if tool_name == "update_customer_requirements":
+
+        if conversation_id is None:
+            return {
+                "error": "missing_conversation_id",
+                "tool": tool_name,
+            }
+
+        conversation = session.get(Conversation, conversation_id)
+
+        if conversation is None:
+            return {
+                "error": "conversation_not_found",
+                "tool": tool_name,
+                "conversation_id": conversation_id,
+            }
+
+        # Preserve existing requirements.
+        updated_requirements = dict(
+            conversation.temp_requirements or {}
+        )
+
+        # Update only explicitly supplied fields.
+        # Explicitly supplied None values are also retained.
+        supplied_fields = request.model_dump(exclude_unset=True)
+
+        updated_requirements.update(supplied_fields)
+
+        try:
+            update_temp_requirements(
+                session=session,
+                conversation_id=conversation_id,
+                requirements=updated_requirements,
+            )
+
+        except ValueError:
+            return {
+                "error": "conversation_not_found",
+                "tool": tool_name,
+                "conversation_id": conversation_id,
+            }
+
+        return {
+            "tool": tool_name,
+            "requirements": conversation.temp_requirements,
+        }
+
+    # ---------------------------------------------------------------
+    # Create callback request
+    # ---------------------------------------------------------------
+    if tool_name == "create_callback_request":
+
+        # Require a conversation ID.
+        if conversation_id is None:
+            return {
+                "error": "missing_conversation_id",
+                "tool": tool_name,
+            }
+
+        # Retrieve conversation.
+        conversation = session.get(Conversation, conversation_id)
+
+        if conversation is None:
+            return {
+                "error": "conversation_not_found",
+                "tool": tool_name,
+                "conversation_id": conversation_id,
+            }
+
+        # A callback requires an associated lead.
+        if conversation.lead_id is None:
+            return {
+                "error": "lead_required",
+                "tool": tool_name,
+                "conversation_id": conversation_id,
+            }
+
+        lead = session.get(Lead, conversation.lead_id)
+
+        if lead is None:
+            return {
+                "error": "lead_not_found",
+                "tool": tool_name,
+                "lead_id": conversation.lead_id,
+            }
+
+        # Retrieve the latest callback consent.
+        # Do not filter by granted=True before selecting the latest record.
+        latest_consent = (
+            session.query(ConsentRecord)
+            .filter(
+                ConsentRecord.conversation_id == conversation_id,
+                ConsentRecord.lead_id == lead.lead_id,
+                ConsentRecord.consent_type == "callback_contact",
+            )
+            .order_by(
+                ConsentRecord.recorded_at.desc(),
+                ConsentRecord.consent_id.desc(),
+            )
+            .first()
+        )
+
+        # Reject if consent is missing or the latest consent was revoked.
+        if latest_consent is None or not latest_consent.granted:
+            return {
+                "error": "callback_consent_required",
+                "tool": tool_name,
+                "conversation_id": conversation_id,
+            }
+
+        # Create callback record.
+        callback = CallbackRequest(
+            lead_id=lead.lead_id,
+            conversation_id=conversation_id,
+            preferred_contact=request.preferred_contact,
+            preferred_date=request.preferred_date.isoformat(),
+            preferred_time=request.preferred_time,
+            reason=request.reason,
+        )
+
+        session.add(callback)
+
+        # Flush to obtain callback_id without committing.
+        session.flush()
+
+        return {
+            "tool": tool_name,
+            "callback": {
+                "callback_id": callback.callback_id,
+                "lead_id": callback.lead_id,
+                "conversation_id": callback.conversation_id,
+                "preferred_contact": callback.preferred_contact,
+                "preferred_date": callback.preferred_date,
+                "preferred_time": callback.preferred_time,
+                "reason": callback.reason,
+                "status": callback.status,
+            },
+        }
+
+    # ---------------------------------------------------------------
+    # Initialize property search service
+    # Keep the caller's session alive.
     # ---------------------------------------------------------------
     service = PropertySearchService(
-        session_factory=lambda: session, close_session=False
+        session_factory=lambda: session,
+        close_session=False,
     )
 
     # ---------------------------------------------------------------
-    # Dispatch based on tool_name
+    # Search properties
     # ---------------------------------------------------------------
     if tool_name == "search_properties":
+
         total, results = service.search(
             location=request.location,
             property_type=request.property_type,
             configuration=request.configuration,
-            min_price=None,  # not part of the request schema
-            max_price=request.max_budget,  # map max_budget → max_price
+            min_price=None,
+            max_price=request.max_budget,
             possession_before=request.possession_before,
             availability=None,
         )
-        items = [PropertySearchItem.model_validate(p) for p in results]
+
+        items = [
+            PropertySearchItem.model_validate(prop)
+            for prop in results
+        ]
+
         return {
             "tool": tool_name,
             "total": total,
-            "items": [i.model_dump(mode="json") for i in items],
+            "items": [
+                item.model_dump(mode="json")
+                for item in items
+            ],
         }
 
     # ---------------------------------------------------------------
-    # get_property_details
+    # Get property details
     # ---------------------------------------------------------------
     prop = service.get_by_id(request.property_id)
+
     if prop is None:
         return {
             "error": "not_found",
             "tool": tool_name,
             "property_id": request.property_id,
         }
+
     detail = PropertyDetailResponse.model_validate(prop)
-    return {"tool": tool_name, "property": detail.model_dump(mode="json")}
+
+    return {
+        "tool": tool_name,
+        "property": detail.model_dump(mode="json"),
+    }
