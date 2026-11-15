@@ -1,4 +1,4 @@
-"""LLM provider abstractions."""
+"""LLM provider abstractions and implementations."""
 
 from .base import (
     BaseLLMProvider,
@@ -9,6 +9,16 @@ from .base import (
     ToolDefinition,
 )
 
+from .groq_provider import (
+    GroqAPIError,
+    GroqAuthenticationError,
+    GroqProvider,
+    GroqProviderError,
+    GroqRateLimitError,
+    GroqResponseError,
+    GroqTimeoutError,
+)
+
 __all__ = [
     "BaseLLMProvider",
     "Message",
@@ -16,4 +26,11 @@ __all__ = [
     "ProviderResponse",
     "ToolCall",
     "ToolDefinition",
+    "GroqProvider",
+    "GroqProviderError",
+    "GroqAuthenticationError",
+    "GroqRateLimitError",
+    "GroqTimeoutError",
+    "GroqAPIError",
+    "GroqResponseError",
 ]
