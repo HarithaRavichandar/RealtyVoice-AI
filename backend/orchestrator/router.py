@@ -1,6 +1,7 @@
 ﻿
 """Conversation, message, and agent API routes for RealtyVoice AI."""
 
+import logging
 from datetime import datetime
 from typing import List, Any
 
@@ -10,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..schemas.property_search import PropertySearchItem
+
 from .schemas import (
     AgentRequest,
     AgentResponse,
@@ -17,18 +19,32 @@ from .schemas import (
     ConversationStartResponse,
     NextAction,
 )
+
 from .services.conversation import (
     create_conversation,
     get_conversation_by_session_id,
 )
+
 from .services.message import (
     add_message,
     get_conversation_messages as load_conversation_messages,
 )
+
 from .services.agent_service import run_agent_loop
+
+
+# --------------------------------------------------
+# ROUTER CONFIGURATION
+# --------------------------------------------------
 
 router = APIRouter()
 
+logger = logging.getLogger(__name__)
+
+
+# --------------------------------------------------
+# RESPONSE SCHEMAS
+# --------------------------------------------------
 
 class MessageResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -38,6 +54,10 @@ class MessageResponse(BaseModel):
     content: str
     created_at: datetime
 
+
+# --------------------------------------------------
+# PROPERTY RESULT EXTRACTION
+# --------------------------------------------------
 
 def _collect_matched_properties(
     tool_results: list[dict[str, Any]],
@@ -61,12 +81,17 @@ def _collect_matched_properties(
             try:
                 item = PropertySearchItem.model_validate(candidate)
                 properties[item.property_id] = item
+
             except (ValidationError, TypeError, ValueError):
                 # Do not expose malformed tool data in the API response.
                 continue
 
     return list(properties.values())
 
+
+# --------------------------------------------------
+# AGENT RESPONSE CONSTRUCTION
+# --------------------------------------------------
 
 def _build_agent_response(
     result: Any,
@@ -75,12 +100,14 @@ def _build_agent_response(
     """Build the public response from the agent's execution results."""
 
     tool_results = result.tool_results
+
     tool_names = {
         entry.get("tool_name")
         for entry in tool_results
     }
 
     matched_properties = _collect_matched_properties(tool_results)
+
     property_ids = [
         item.property_id for item in matched_properties
     ]
@@ -89,6 +116,7 @@ def _build_agent_response(
 
     if result.iteration_limit_reached:
         intent = "unknown"
+
         next_action = NextAction(
             action="error",
             message=reply,
@@ -105,7 +133,11 @@ def _build_agent_response(
         )
 
         next_action = NextAction(
-            action="await_user" if callback_succeeded else "ask_clarification",
+            action=(
+                "await_user"
+                if callback_succeeded
+                else "ask_clarification"
+            ),
             message=reply,
         )
 
@@ -113,7 +145,11 @@ def _build_agent_response(
         intent = "property_details"
 
         next_action = NextAction(
-            action="show_properties" if matched_properties else "ask_clarification",
+            action=(
+                "show_properties"
+                if matched_properties
+                else "ask_clarification"
+            ),
             message=reply,
             property_ids=property_ids,
         )
@@ -122,7 +158,11 @@ def _build_agent_response(
         intent = "property_search"
 
         next_action = NextAction(
-            action="show_properties" if matched_properties else "ask_clarification",
+            action=(
+                "show_properties"
+                if matched_properties
+                else "ask_clarification"
+            ),
             message=reply,
             property_ids=property_ids,
         )
@@ -135,6 +175,7 @@ def _build_agent_response(
         for entry in tool_results
     ):
         intent = "unknown"
+
         next_action = NextAction(
             action="error",
             message=reply,
@@ -144,7 +185,11 @@ def _build_agent_response(
         intent = "general_question"
 
         next_action = NextAction(
-            action="ask_clarification" if "?" in reply else "await_user",
+            action=(
+                "ask_clarification"
+                if "?" in reply
+                else "await_user"
+            ),
             message=reply,
         )
 
@@ -159,6 +204,10 @@ def _build_agent_response(
     )
 
 
+# --------------------------------------------------
+# CREATE CONVERSATION
+# --------------------------------------------------
+
 @router.post(
     "/conversations",
     response_model=ConversationStartResponse,
@@ -170,6 +219,7 @@ def start_conversation(
 ):
     try:
         conv = create_conversation(db, request.channel)
+
         db.commit()
         db.refresh(conv)
 
@@ -181,11 +231,18 @@ def start_conversation(
 
     except Exception as exc:
         db.rollback()
+
+        logger.exception("Conversation creation failed")
+
         raise HTTPException(
             status_code=500,
             detail="Unable to create conversation",
         ) from exc
 
+
+# --------------------------------------------------
+# GET CONVERSATION
+# --------------------------------------------------
 
 @router.get(
     "/conversations/{session_id}",
@@ -210,6 +267,10 @@ def get_conversation(
     )
 
 
+# --------------------------------------------------
+# GET CONVERSATION MESSAGES
+# --------------------------------------------------
+
 @router.get(
     "/conversations/{session_id}/messages",
     response_model=List[MessageResponse],
@@ -226,7 +287,10 @@ def list_conversation_messages(
             detail="Conversation not found",
         )
 
-    messages = load_conversation_messages(db, conv.conversation_id)
+    messages = load_conversation_messages(
+        db,
+        conv.conversation_id,
+    )
 
     return [
         MessageResponse(
@@ -238,6 +302,10 @@ def list_conversation_messages(
         for m in messages
     ]
 
+
+# --------------------------------------------------
+# AGENT TURN
+# --------------------------------------------------
 
 @router.post(
     "/agent/turn",
@@ -258,6 +326,7 @@ async def agent_turn(
 
     if conversation is None:
         db.rollback()
+
         raise HTTPException(
             status_code=404,
             detail="Conversation not found",
@@ -304,6 +373,9 @@ async def agent_turn(
         ) from exc
 
     except Exception as exc:
+        # Log the complete exception and traceback.
+        logger.exception("Agent turn failed: %s", exc)
+
         db.rollback()
 
         raise HTTPException(
@@ -311,6 +383,10 @@ async def agent_turn(
             detail="The agent service is temporarily unavailable",
         ) from exc
 
+
+# --------------------------------------------------
+# MODULE EXPORTS
+# --------------------------------------------------
 
 __all__ = [
     "router",

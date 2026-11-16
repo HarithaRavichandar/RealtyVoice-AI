@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RealtyVoice AI</title>
+    <link rel="stylesheet" href="/static/css/styles.css" />
+</head>
+<body>
+    <!-- Header with branding and connection status -->
+    <header class="header" role="banner">
+        <h1>RealtyVoice AI</h1>
+        <div id="conn-status" class="status" aria-live="polite">Connecting…</div>
+    </header>
+
+    <!-- Main interactive area -->
+    <main class="chat-container" role="main">
+        <!-- Welcome panel with suggested prompts -->
+        <section id="welcome" class="welcome-panel" aria-label="Welcome">
+            <h2>Welcome!</h2>
+            <p>Ask me about properties, pricing, or anything real‑estate‑related.</p>
+            <div class="suggestions" role="group" aria-label="Suggested prompts">
+                <button class="suggest-btn" type="button">Show me apartments in Delhi</button>
+                <button class="suggest-btn" type="button">What are the price ranges for villas?</button>
+                <button class="suggest-btn" type="button">Tell me about upcoming projects</button>
+            </div>
+        </section>
+
+        <!-- Chat message display -->
+        <section id="chat" class="chat-panel" aria-label="Chat messages" hidden></section>
+
+        <!-- Compact customer requirements panel -->
+        <section id="requirements" class="requirements-panel" aria-label="Customer requirements" hidden>
+            <h3>Collected Requirements</h3>
+            <ul id="requirements-list"></ul>
+        </section>
+
+        <!-- Matched properties cards panel -->
+        <section id="properties" class="properties-panel" aria-label="Matched properties" hidden>
+            <h3>Matched Properties</h3>
+            <div id="properties-list" class="properties-grid"></div>
+        </section>
+    </main>
+
+    <!-- Input bar with textarea, send button, and microphone placeholder -->
+    <footer class="input-bar" role="form" aria-label="Message input">
+        <label for="msg-input" class="visually-hidden">Your message</label>
+        <textarea id="msg-input"
+                  rows="1"
+                  placeholder="Type your message…"
+                  autocomplete="off"
+                  aria-label="Message input"
+                  aria-multiline="true"></textarea>
+        <button id="send-btn" class="send-btn" type="button" disabled>Send</button>
+        <button id="mic-btn" class="mic-btn" type="button" title="Voice input (not yet implemented)" disabled aria-label="Microphone placeholder">
+            🎤
+        </button>
+    </footer>
+
+    <script src="/static/js/app.js" type="module"></script>
+</body>
+</html>
