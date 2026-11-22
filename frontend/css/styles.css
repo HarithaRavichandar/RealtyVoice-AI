@@ -382,6 +382,73 @@ body {
 }
 
 
+/* ---- Callback Status Cards ---------------------------------- */
+
+.callback-card {
+    max-width: 80%;
+    align-self: flex-start;
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-top: 0.25rem;
+}
+
+.callback-card .callback-icon {
+    font-size: 1.5rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.callback-card .callback-heading {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.callback-card .callback-detail {
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* Success variant */
+.callback-card.callback-success {
+    background: #e8f5e9;
+    border: 1px solid #a5d6a7;
+}
+
+.callback-card.callback-success .callback-heading {
+    color: #2e7d32;
+}
+
+.callback-card.callback-success .callback-detail {
+    color: #33691e;
+}
+
+/* Pending / in-progress variant */
+.callback-card.callback-pending {
+    background: #fff8e1;
+    border: 1px solid #ffe082;
+}
+
+.callback-card.callback-pending .callback-heading {
+    color: #e65100;
+}
+
+.callback-card.callback-pending .callback-detail {
+    color: #bf360c;
+}
+
+@media (max-width: 600px) {
+    .callback-card {
+        max-width: 100%;
+        padding: 0.85rem 1rem;
+    }
+}
+
+
 /* ---- Input Bar ---------------------------------------------- */
 
 .input-bar {

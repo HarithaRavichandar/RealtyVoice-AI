@@ -11,6 +11,7 @@
  * - Customer requirements display
  * - Matched property cards
  * - Suggestion buttons
+ * - Callback status cards (success / pending)
  * - Enter / Shift+Enter keyboard handling
  */
 
@@ -742,7 +743,67 @@ function createPropertyCard(property) {
 }
 
 // ==================================================
-// 10. PROPERTY LIST RENDERING
+// 10. CALLBACK STATUS RENDERING
+// ==================================================
+
+function createCallbackCard(data) {
+    const card = document.createElement("div");
+    card.className = "callback-card";
+
+    const intent = data.intent;
+    const nextAction = data.next_action || {};
+    const toolResults = data._tool_results || [];
+
+    // Determine callback state from intent and next_action.
+    if (intent === "callback_request" && nextAction.action === "await_user") {
+        // Callback was successfully created.
+        card.classList.add("callback-success");
+
+        const icon = createTextElement("span", "callback-icon", "✅");
+        const heading = createTextElement("h4", "callback-heading", "Callback Scheduled");
+        const detail = createTextElement(
+            "p",
+            "callback-detail",
+            "Your callback request has been submitted. Our team will reach out to you at the preferred date and time."
+        );
+
+        card.append(icon, heading, detail);
+        return card;
+    }
+
+    if (intent === "callback_request" && nextAction.action === "ask_clarification") {
+        // Callback flow in progress — needs more info or consent.
+        card.classList.add("callback-pending");
+
+        const icon = createTextElement("span", "callback-icon", "\u{1F4DE}");
+        const heading = createTextElement("h4", "callback-heading", "Callback Request");
+        const detail = createTextElement(
+            "p",
+            "callback-detail",
+            "Please provide the requested information to complete your callback request."
+        );
+
+        card.append(icon, heading, detail);
+        return card;
+    }
+
+    // No callback-specific card needed.
+    return null;
+}
+
+function renderCallbackStatus(data) {
+    if (!chatContainer || !data) return;
+
+    const card = createCallbackCard(data);
+    if (!card) return;
+
+    chatContainer.appendChild(card);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+
+// ==================================================
+// 11. PROPERTY LIST RENDERING
 // ==================================================
 
 function clearProperties() {
@@ -787,7 +848,7 @@ function renderProperties(properties) {
 }
 
 // ==================================================
-// 11. AGENT API REQUEST
+// 12. AGENT API REQUEST
 // ==================================================
 
 async function requestAgentResponse(message) {
@@ -804,7 +865,7 @@ async function requestAgentResponse(message) {
 }
 
 // ==================================================
-// 12. MESSAGE SENDING
+// 13. MESSAGE SENDING
 // ==================================================
 
 async function sendMessage(message) {
@@ -875,6 +936,9 @@ async function sendMessage(message) {
         // Assistant reply.
         renderMessage(data.reply, "assistant");
 
+        // Callback status card (if applicable).
+        renderCallbackStatus(data);
+
         // Structured customer requirements.
         renderRequirements(data.requirements);
 
@@ -918,7 +982,7 @@ async function sendMessage(message) {
 }
 
 // ==================================================
-// 13. EVENT HANDLERS
+// 14. EVENT HANDLERS
 // ==================================================
 
 function handleSendClick() {
@@ -962,7 +1026,7 @@ function initializeSuggestionButtons() {
 }
 
 // ==================================================
-// 14. APPLICATION INITIALIZATION
+// 15. APPLICATION INITIALIZATION
 // ==================================================
 
 async function init() {
@@ -996,7 +1060,7 @@ async function init() {
 }
 
 // ==================================================
-// 15. DOM READY
+// 16. DOM READY
 // ==================================================
 
 window.addEventListener("DOMContentLoaded", init);
@@ -1006,6 +1070,7 @@ if (typeof module !== "undefined" && module.exports) {
     module.exports = {
         parseMarkdown,
         splitTableRow,
-        createPropertyCard
+        createPropertyCard,
+        createCallbackCard,
     };
 }
