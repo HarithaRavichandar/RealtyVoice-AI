@@ -8,7 +8,7 @@ from datetime import datetime, date
 from decimal import Decimal
 from typing import List, Optional
 
-from pydantic import BaseModel, Field, validator, ConfigDict, field_validator, model_validator
+from pydantic import BaseModel, Field, validator, ConfigDict, field_validator, field_serializer, model_validator
 
 
 class PropertySearchItem(BaseModel):
@@ -33,12 +33,17 @@ class PropertySearchItem(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    # ConfigDict and field_validator are imported at module level
     model_config = ConfigDict(
         from_attributes=True,
         populate_by_name=True,
-        json_encoders={Decimal: lambda v: int(v) if v == int(v) else float(v)},
     )
+
+    @field_serializer("price_min", "price_max", "listing_price")
+    @classmethod
+    def _serialize_decimal(cls, v: Optional[Decimal], _info) -> Optional[int | float]:
+        if v is None:
+            return None
+        return int(v) if v == int(v) else float(v)
     
     @field_validator('price_min', 'price_max', 'listing_price', mode='before')
     @classmethod
@@ -50,13 +55,12 @@ class PropertySearchItem(BaseModel):
 
 
 class PropertySearchResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     total: int
     limit: int
     offset: int
     items: List[PropertySearchItem]
-
-    class Config:
-        orm_mode = True
 
 
 class PropertyDetailResponse(PropertySearchItem):

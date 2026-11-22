@@ -57,7 +57,7 @@ def ensure_same_database_path() -> None:
 
 
 def timestamped_backup_path(original: Path) -> Path:
-    ts = datetime.datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
+    ts = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     return original.parent / f"{original.name}.bak_{ts}.sqlite"
 
 

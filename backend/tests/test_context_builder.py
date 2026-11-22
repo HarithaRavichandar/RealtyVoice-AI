@@ -26,7 +26,7 @@ def test_empty_history_and_missing_requirements(dbsession: Session):
     assert ctx["history"] == []
     # requirements should be empty CustomerRequirements
     assert isinstance(ctx["requirements"], CustomerRequirements)
-    assert ctx["requirements"].dict() == {
+    assert ctx["requirements"].model_dump() == {
         "budget_min": None,
         "budget_max": None,
         "location": None,
@@ -114,7 +114,7 @@ def test_invalid_requirements_type_and_values(dbsession: Session):
     dbsession.commit()
     ctx = build_context(dbsession, conv.external_session_id, incoming_message="msg", history_limit=20)
     # Should fallback to empty requirements
-    assert ctx["requirements"].dict() == {
+    assert ctx["requirements"].model_dump() == {
         "budget_min": None,
         "budget_max": None,
         "location": None,
@@ -130,7 +130,7 @@ def test_invalid_requirements_type_and_values(dbsession: Session):
     dbsession.commit()
     ctx2 = build_context(dbsession, conv.external_session_id, incoming_message="msg", history_limit=20)
     # Validation fails, fallback to empty
-    assert ctx2["requirements"].dict() == {
+    assert ctx2["requirements"].model_dump() == {
         "budget_min": None,
         "budget_max": None,
         "location": None,

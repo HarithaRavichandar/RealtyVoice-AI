@@ -1,7 +1,7 @@
 
 # -*- coding: utf-8 -*-
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
 from sqlalchemy import text
@@ -51,7 +51,7 @@ def create_consent(
         conversation_id=conversation_id,
         consent_type="callback_contact",
         granted=granted,
-        recorded_at=recorded_at or datetime.utcnow(),
+        recorded_at=recorded_at or datetime.now(timezone.utc),
         source="web",
         policy_version="1.0",
     )
@@ -163,7 +163,7 @@ def test_later_revocation_overrides_earlier_granted_consent(dbsession):
         lead.lead_id,
     )
 
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
 
     create_consent(
         dbsession,
@@ -200,7 +200,7 @@ def test_later_granted_consent_overrides_earlier_revocation(dbsession):
         lead.lead_id,
     )
 
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
 
     create_consent(
         dbsession,

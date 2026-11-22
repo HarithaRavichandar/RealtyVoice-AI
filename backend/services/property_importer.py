@@ -15,7 +15,7 @@ import json
 import re
 from pathlib import Path
 from decimal import Decimal, InvalidOperation
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Set, Tuple
 
 from sqlalchemy import select, tuple_
@@ -178,8 +178,8 @@ class PropertyImporter:
                     setattr(existing_row, attr, getattr(obj, attr))
                     changed = True
             if changed:
-                existing_row.updated_at = datetime.utcnow()
-                existing_row.import_timestamp = datetime.utcnow()
+                existing_row.updated_at = datetime.now(timezone.utc)
+                existing_row.import_timestamp = datetime.now(timezone.utc)
         if to_add:
             session.add_all(to_add)
         # commit handled by caller
