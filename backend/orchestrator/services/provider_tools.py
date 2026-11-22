@@ -23,8 +23,24 @@ TOOL_DESCRIPTIONS = {
     "create_callback_request": (
         "Create a callback request using the customer's preferred "
         "contact method, date, time, and reason. Only use this when "
-        "the customer has explicitly requested a callback. Backend "
-        "consent checks must still pass."
+        "the customer has explicitly requested a callback. A lead "
+        "must be registered and callback_contact consent must be "
+        "recorded before calling this tool."
+    ),
+    "register_lead": (
+        "Register the customer as a lead by saving their contact "
+        "information (name, phone, or email). Call this when the "
+        "customer provides their contact details, typically during "
+        "a callback request flow. At least one contact field is required. "
+        "If a lead is already registered for this conversation, "
+        "this tool updates the existing lead."
+    ),
+    "record_consent": (
+        "Record the customer's explicit consent or refusal for a "
+        "specific purpose. The agent must clearly ask the customer "
+        "for permission before calling this tool. Required consent "
+        "types: 'callback_contact' before creating a callback request, "
+        "'contact_storage' before storing contact information."
     ),
 }
 

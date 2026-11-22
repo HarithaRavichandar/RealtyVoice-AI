@@ -247,9 +247,110 @@ class CreateCallbackRequest(BaseModel):
         return value
 
 
+# ---------------------------------------------------------------------------
+# 5. RegisterLeadRequest
+# ---------------------------------------------------------------------------
+
+class RegisterLeadRequest(BaseModel):
+    """Input for the register_lead tool.
+
+    Collects customer contact information so a Lead record can be created
+    and linked to the current conversation.  At least one of ``customer_name``,
+    ``phone``, or ``email`` must be provided.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    customer_name: Optional[str] = Field(
+        default=None,
+        description="Customer's full name",
+    )
+    phone: Optional[str] = Field(
+        default=None,
+        description="Customer's phone number",
+    )
+    email: Optional[str] = Field(
+        default=None,
+        description="Customer's email address",
+    )
+
+    # Reject whitespace-only values.
+    _name_ws = field_validator(
+        "customer_name",
+        mode="before",
+    )(_reject_whitespace)
+
+    _phone_ws = field_validator(
+        "phone",
+        mode="before",
+    )(_reject_whitespace)
+
+    _email_ws = field_validator(
+        "email",
+        mode="before",
+    )(_reject_whitespace)
+
+    @model_validator(mode="after")
+    def _at_least_one_contact(self) -> "RegisterLeadRequest":
+        if not any([self.customer_name, self.phone, self.email]):
+            raise ValueError(
+                "At least one of customer_name, phone, or email is required"
+            )
+        return self
+
+
+# ---------------------------------------------------------------------------
+# 6. RecordConsentRequest
+# ---------------------------------------------------------------------------
+
+class RecordConsentRequest(BaseModel):
+    """Input for the record_consent tool.
+
+    Records the customer's explicit consent (or refusal) for a specific
+    consent type.  The agent must ask for consent clearly before calling
+    this tool.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    consent_type: str = Field(
+        ...,
+        description=(
+            "Type of consent: 'callback_contact' for callback requests, "
+            "'contact_storage' for storing contact info, "
+            "'marketing_communications' for marketing opt-in"
+        ),
+    )
+    granted: bool = Field(
+        ...,
+        description="True if the customer granted consent, False if they refused",
+    )
+
+    _consent_type_ws = field_validator(
+        "consent_type",
+        mode="before",
+    )(_reject_whitespace)
+
+    @field_validator("consent_type")
+    @classmethod
+    def _validate_consent_type(cls, value: str) -> str:
+        allowed = {
+            "contact_storage",
+            "callback_contact",
+            "marketing_communications",
+        }
+        if value not in allowed:
+            raise ValueError(
+                f"consent_type must be one of: {', '.join(sorted(allowed))}"
+            )
+        return value
+
+
 __all__ = [
     "SearchPropertiesRequest",
     "GetPropertyDetailsRequest",
     "UpdateCustomerRequirementsRequest",
     "CreateCallbackRequest",
+    "RegisterLeadRequest",
+    "RecordConsentRequest",
 ]

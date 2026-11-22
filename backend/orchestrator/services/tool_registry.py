@@ -16,6 +16,8 @@ from ..tools.schemas import (
     GetPropertyDetailsRequest,
     UpdateCustomerRequirementsRequest,
     CreateCallbackRequest,
+    RegisterLeadRequest,
+    RecordConsentRequest,
 )
 
 # ---------------------------------------------------------------------------
@@ -57,6 +59,16 @@ TOOL_REGISTRY: Dict[str, ToolInfo] = {
     "create_callback_request": ToolInfo(
         name="create_callback_request",
         input_schema=CreateCallbackRequest,
+        implementation=None,
+    ),
+    "register_lead": ToolInfo(
+        name="register_lead",
+        input_schema=RegisterLeadRequest,
+        implementation=None,
+    ),
+    "record_consent": ToolInfo(
+        name="record_consent",
+        input_schema=RecordConsentRequest,
         implementation=None,
     ),
 }

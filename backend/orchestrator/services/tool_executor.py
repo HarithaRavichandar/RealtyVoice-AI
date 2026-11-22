@@ -1,13 +1,15 @@
 
 # -*- coding: utf-8 -*-
 """
-Tool Executor – Phase 5C Increment 3D
+Tool Executor – Phase 5C Increment 3D + Phase 2 (Lead & Consent)
 
 Implements execution for:
 * search_properties
 * get_property_details
 * update_customer_requirements
 * create_callback_request
+* register_lead
+* record_consent
 
 The executor validates incoming payloads against request schemas and uses
 the caller-supplied SQLAlchemy session.
@@ -28,6 +30,8 @@ from ..tools.schemas import (
     GetPropertyDetailsRequest,
     UpdateCustomerRequirementsRequest,
     CreateCallbackRequest,
+    RegisterLeadRequest,
+    RecordConsentRequest,
 )
 
 from .conversation import update_temp_requirements
@@ -68,6 +72,12 @@ def execute_tool(
 
     elif tool_name == "create_callback_request":
         Schema = CreateCallbackRequest
+
+    elif tool_name == "register_lead":
+        Schema = RegisterLeadRequest
+
+    elif tool_name == "record_consent":
+        Schema = RecordConsentRequest
 
     else:
         return {
@@ -227,6 +237,150 @@ def execute_tool(
                 "preferred_time": callback.preferred_time,
                 "reason": callback.reason,
                 "status": callback.status,
+            },
+        }
+
+    # ---------------------------------------------------------------
+    # Register lead
+    # ---------------------------------------------------------------
+    if tool_name == "register_lead":
+
+        if conversation_id is None:
+            return {
+                "error": "missing_conversation_id",
+                "tool": tool_name,
+            }
+
+        conversation = session.get(Conversation, conversation_id)
+
+        if conversation is None:
+            return {
+                "error": "conversation_not_found",
+                "tool": tool_name,
+                "conversation_id": conversation_id,
+            }
+
+        # If the conversation already has a lead, update it rather
+        # than creating a duplicate.
+        if conversation.lead_id is not None:
+            lead = session.get(Lead, conversation.lead_id)
+
+            if lead is not None:
+                if request.customer_name is not None:
+                    lead.customer_name = request.customer_name
+                if request.phone is not None:
+                    lead.phone = request.phone
+                if request.email is not None:
+                    lead.email = request.email
+
+                session.flush()
+
+                return {
+                    "tool": tool_name,
+                    "lead": {
+                        "lead_id": lead.lead_id,
+                        "customer_name": lead.customer_name,
+                        "phone": lead.phone,
+                        "email": lead.email,
+                        "pipeline_status": lead.pipeline_status,
+                    },
+                    "updated": True,
+                }
+
+        # Create a new lead and link it to the conversation.
+        # Copy any requirements already collected during the conversation.
+        temp_req = conversation.temp_requirements or {}
+
+        lead = Lead(
+            customer_name=request.customer_name,
+            phone=request.phone,
+            email=request.email,
+            budget_min=temp_req.get("budget_min"),
+            budget_max=temp_req.get("budget_max"),
+            preferred_location=temp_req.get("location"),
+            property_type=temp_req.get("property_type"),
+            configuration=temp_req.get("configuration"),
+            possession_preference=temp_req.get("possession_before"),
+            qualification_status="Unqualified",
+            pipeline_status="New",
+        )
+
+        session.add(lead)
+        session.flush()
+
+        # Link the conversation to the new lead.
+        conversation.lead_id = lead.lead_id
+        session.flush()
+
+        return {
+            "tool": tool_name,
+            "lead": {
+                "lead_id": lead.lead_id,
+                "customer_name": lead.customer_name,
+                "phone": lead.phone,
+                "email": lead.email,
+                "pipeline_status": lead.pipeline_status,
+            },
+            "updated": False,
+        }
+
+    # ---------------------------------------------------------------
+    # Record consent
+    # ---------------------------------------------------------------
+    if tool_name == "record_consent":
+
+        if conversation_id is None:
+            return {
+                "error": "missing_conversation_id",
+                "tool": tool_name,
+            }
+
+        conversation = session.get(Conversation, conversation_id)
+
+        if conversation is None:
+            return {
+                "error": "conversation_not_found",
+                "tool": tool_name,
+                "conversation_id": conversation_id,
+            }
+
+        # A consent record requires an associated lead.
+        if conversation.lead_id is None:
+            return {
+                "error": "lead_required",
+                "tool": tool_name,
+                "message": "Register the customer as a lead before recording consent.",
+                "conversation_id": conversation_id,
+            }
+
+        lead = session.get(Lead, conversation.lead_id)
+
+        if lead is None:
+            return {
+                "error": "lead_not_found",
+                "tool": tool_name,
+                "lead_id": conversation.lead_id,
+            }
+
+        consent = ConsentRecord(
+            lead_id=lead.lead_id,
+            conversation_id=conversation_id,
+            consent_type=request.consent_type,
+            granted=request.granted,
+            source="web",
+            policy_version="1.0",
+        )
+
+        session.add(consent)
+        session.flush()
+
+        return {
+            "tool": tool_name,
+            "consent": {
+                "consent_id": consent.consent_id,
+                "lead_id": consent.lead_id,
+                "consent_type": consent.consent_type,
+                "granted": consent.granted,
             },
         }
 

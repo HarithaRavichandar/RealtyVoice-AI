@@ -170,6 +170,8 @@ def _build_agent_response(
     elif any(
         entry.get("tool_name") not in {
             "update_customer_requirements",
+            "register_lead",
+            "record_consent",
             None,
         }
         for entry in tool_results

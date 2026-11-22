@@ -11,6 +11,8 @@ from backend.orchestrator.tools.schemas import (
     GetPropertyDetailsRequest,
     UpdateCustomerRequirementsRequest,
     CreateCallbackRequest,
+    RegisterLeadRequest,
+    RecordConsentRequest,
 )
 from backend.orchestrator.services.tool_registry import (
     TOOL_REGISTRY,
@@ -197,6 +199,8 @@ def test_tool_registry_contents():
         "get_property_details": GetPropertyDetailsRequest,
         "update_customer_requirements": UpdateCustomerRequirementsRequest,
         "create_callback_request": CreateCallbackRequest,
+        "register_lead": RegisterLeadRequest,
+        "record_consent": RecordConsentRequest,
     }
     assert set(TOOL_REGISTRY.keys()) == set(expected.keys())
     for name, schema in expected.items():
