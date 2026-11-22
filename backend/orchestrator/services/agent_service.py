@@ -8,7 +8,9 @@ responsibility.
 
 from __future__ import annotations
 
+import asyncio
 import json
+import logging
 from dataclasses import dataclass
 from typing import Any, Optional
 
@@ -32,6 +34,8 @@ from .message import add_message, add_tool_message
 from .provider_tools import get_provider_tool_definitions
 from .tool_executor import execute_tool
 from .tool_registry import lookup_tool
+
+logger = logging.getLogger(__name__)
 
 
 
@@ -203,6 +207,97 @@ def _tool_result_status(result: dict[str, Any]) -> str:
     return "error" if result.get("error") else "success"
 
 
+# Error-code → human-readable hint for the LLM.
+# These help the model self-correct instead of repeating the same call.
+_TOOL_ERROR_HINTS: dict[str, str] = {
+    "lead_required": (
+        "A lead must be registered before this action. "
+        "Call register_lead first with the customer's contact information."
+    ),
+    "callback_consent_required": (
+        "Callback consent has not been granted. Ask the customer for "
+        "consent and call record_consent with consent_type='callback_contact' "
+        "and granted=true before retrying."
+    ),
+    "conversation_not_found": (
+        "The conversation could not be found. This is an internal error."
+    ),
+    "missing_conversation_id": (
+        "No conversation context is available. This is an internal error."
+    ),
+    "validation": (
+        "The tool arguments were invalid. Check the required fields "
+        "and correct the values before retrying."
+    ),
+}
+
+
+def _build_tool_error_hint(result: dict[str, Any]) -> str:
+    """Build a helpful system hint when a tool call fails."""
+    error_code = result.get("error", "")
+    hint = _TOOL_ERROR_HINTS.get(error_code, "")
+    details = result.get("details")
+
+    parts = [f"Tool error: {error_code}."]
+    if hint:
+        parts.append(hint)
+    if details and isinstance(details, list):
+        # Include first validation error message for context.
+        for detail in details[:2]:
+            msg = detail.get("msg", "")
+            loc = detail.get("loc", [])
+            if msg:
+                field = ".".join(str(x) for x in loc) if loc else "unknown"
+                parts.append(f"Field '{field}': {msg}")
+
+    return " ".join(parts)
+
+
+_RETRYABLE_PROVIDER_ERRORS = (
+    "GroqTimeoutError",
+    "GroqRateLimitError",
+)
+
+# Delay in seconds before a single retry on transient provider errors.
+_PROVIDER_RETRY_DELAY = 2.0
+
+
+async def _chat_with_retry(
+    provider: BaseLLMProvider,
+    messages: list[Message],
+    tool_definitions: list,
+    *,
+    max_retries: int = 1,
+) -> ProviderResponse:
+    """Call the provider with a single retry on transient errors."""
+    last_error: Exception | None = None
+
+    for attempt in range(1 + max_retries):
+        try:
+            return await provider.chat_completion(
+                messages=messages,
+                tools=tool_definitions,
+            )
+        except Exception as exc:
+            error_type = type(exc).__name__
+
+            if error_type not in _RETRYABLE_PROVIDER_ERRORS:
+                raise
+
+            last_error = exc
+
+            if attempt < max_retries:
+                logger.warning(
+                    "Transient provider error (%s), retrying in %.1fs…",
+                    error_type,
+                    _PROVIDER_RETRY_DELAY,
+                )
+                await asyncio.sleep(_PROVIDER_RETRY_DELAY)
+
+    # All retries exhausted.
+    raise last_error  # type: ignore[misc]
+
+
 def _execute_registered_tool(
     session: Session,
     conversation_id: int,
@@ -310,11 +405,10 @@ async def run_agent_loop(
         # The extra provider call allows the model to produce a final
         # natural-language response after the last permitted tool round.
         for _ in range(AGENT_MAX_TOOL_ITERATIONS + 1):
-            response: ProviderResponse = (
-                await active_provider.chat_completion(
-                    messages=messages,
-                    tools=tool_definitions,
-                )
+            response: ProviderResponse = await _chat_with_retry(
+                active_provider,
+                messages,
+                tool_definitions,
             )
 
             if not response.tool_calls:
@@ -345,6 +439,20 @@ async def run_agent_loop(
                 iteration_limit_reached = True
                 break
 
+            # Warn the model when it is on the last permitted iteration
+            # so it can wrap up gracefully.
+            if tool_iterations == AGENT_MAX_TOOL_ITERATIONS - 1:
+                messages.append(
+                    Message(
+                        role=MessageRole.SYSTEM,
+                        content=(
+                            "You are on your last permitted tool call. "
+                            "After this round, summarise your findings "
+                            "and respond to the customer."
+                        ),
+                    )
+                )
+
             # Preserve the assistant tool-call message in provider history.
             messages.append(
                 Message(
@@ -373,6 +481,7 @@ async def run_agent_loop(
                     }
                 )
 
+                # Send the tool result to the provider.
                 messages.append(
                     Message(
                         role=MessageRole.TOOL,
@@ -381,12 +490,55 @@ async def run_agent_loop(
                     )
                 )
 
+                # When a tool fails, inject a hint so the LLM can
+                # self-correct on its next iteration.
+                if result.get("error"):
+                    hint = _build_tool_error_hint(result)
+                    logger.info(
+                        "Tool %s failed (%s); injecting hint",
+                        tool_call.function_name,
+                        result["error"],
+                    )
+                    messages.append(
+                        Message(
+                            role=MessageRole.SYSTEM,
+                            content=hint,
+                        )
+                    )
+
             tool_iterations += 1
 
-        fallback_reply = (
-            "I've reached the processing limit for this request. "
+        # Build an informative fallback when the iteration limit is hit.
+        completed_tools = [
+            tr["tool_name"]
+            for tr in tool_results
+            if not tr["result"].get("error")
+        ]
+        failed_tools = [
+            tr["tool_name"]
+            for tr in tool_results
+            if tr["result"].get("error")
+        ]
+
+        fallback_parts = [
+            "I've reached the processing limit for this request."
+        ]
+        if completed_tools:
+            unique_completed = list(dict.fromkeys(completed_tools))
+            fallback_parts.append(
+                f"I completed: {', '.join(unique_completed)}."
+            )
+        if failed_tools:
+            unique_failed = list(dict.fromkeys(failed_tools))
+            fallback_parts.append(
+                f"These steps still need attention: "
+                f"{', '.join(unique_failed)}."
+            )
+        fallback_parts.append(
             "Please tell me which part you'd like me to continue with."
         )
+
+        fallback_reply = " ".join(fallback_parts)
 
         return AgentRunResult(
             session_id=session_id,
