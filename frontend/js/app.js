@@ -12,6 +12,9 @@
  * - Matched property cards
  * - Suggestion buttons
  * - Callback status cards (success / pending)
+ * - Typing indicator while waiting for agent
+ * - Error toast notifications
+ * - Auto-resize textarea
  * - Enter / Shift+Enter keyboard handling
  */
 
@@ -395,6 +398,85 @@ function parseInline(text) {
 
 function showError(message) {
     renderMessage(message, "assistant");
+}
+
+// ==================================================
+// 6. TYPING INDICATOR
+// ==================================================
+
+let typingBubble = null;
+
+function showTypingIndicator() {
+    if (!chatContainer) return;
+
+    showChat();
+
+    typingBubble = document.createElement("div");
+    typingBubble.className = "bubble assistant typing-indicator";
+    typingBubble.setAttribute("aria-label", "Assistant is typing");
+
+    for (let i = 0; i < 3; i++) {
+        const dot = document.createElement("span");
+        dot.className = "typing-dot";
+        typingBubble.appendChild(dot);
+    }
+
+    chatContainer.appendChild(typingBubble);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+function hideTypingIndicator() {
+    if (typingBubble && typingBubble.parentNode) {
+        typingBubble.parentNode.removeChild(typingBubble);
+    }
+    typingBubble = null;
+}
+
+// ==================================================
+// 7. ERROR TOAST
+// ==================================================
+
+function showToast(message, type = "error") {
+    // Remove any existing toast.
+    const existing = document.querySelector(".toast");
+    if (existing) existing.remove();
+
+    const toast = document.createElement("div");
+    toast.className = `toast toast-${type}`;
+    toast.setAttribute("role", "alert");
+    toast.textContent = message;
+
+    document.body.appendChild(toast);
+
+    // Trigger the enter animation on the next frame.
+    requestAnimationFrame(() => {
+        toast.classList.add("toast-visible");
+    });
+
+    // Auto-dismiss after 5 seconds.
+    setTimeout(() => {
+        toast.classList.remove("toast-visible");
+        toast.addEventListener("transitionend", () => toast.remove(), { once: true });
+        // Fallback removal if transitionend doesn't fire.
+        setTimeout(() => toast.remove(), 400);
+    }, 5000);
+}
+
+// ==================================================
+// 8. AUTO-RESIZE TEXTAREA
+// ==================================================
+
+function autoResizeInput() {
+    if (!msgInput) return;
+
+    // Reset to single-row height so scrollHeight reflects content.
+    msgInput.style.height = "auto";
+
+    // Cap at roughly 6 lines (~9rem).
+    const maxHeight = 144;
+    const newHeight = Math.min(msgInput.scrollHeight, maxHeight);
+
+    msgInput.style.height = `${newHeight}px`;
 }
 
 // ==================================================
@@ -884,6 +966,9 @@ async function sendMessage(message) {
     // Display the user message once.
     renderMessage(cleanMessage, "user");
 
+    // Show typing indicator while waiting.
+    showTypingIndicator();
+
     try {
         if (!sessionId) {
             await createConversation();
@@ -933,6 +1018,9 @@ async function sendMessage(message) {
             );
         }
 
+        // Remove typing indicator before showing the reply.
+        hideTypingIndicator();
+
         // Assistant reply.
         renderMessage(data.reply, "assistant");
 
@@ -948,12 +1036,15 @@ async function sendMessage(message) {
         // Clear input only after successful completion.
         if (msgInput) {
             msgInput.value = "";
+            autoResizeInput();
         }
 
         setStatus("Connected", true);
 
     } catch (error) {
         console.error("Message sending failed:", error);
+
+        hideTypingIndicator();
 
         // Preserve the original message for retry.
         if (msgInput) {
@@ -962,6 +1053,11 @@ async function sendMessage(message) {
 
         showError(
             "I couldn't process your message. Please try again."
+        );
+
+        showToast(
+            error.message || "Something went wrong. Please try again.",
+            "error"
         );
 
         setStatus("Request failed", false);
@@ -1039,7 +1135,10 @@ async function init() {
 
     // Text input.
     if (msgInput) {
-        msgInput.addEventListener("input", updateSendButton);
+        msgInput.addEventListener("input", () => {
+            updateSendButton();
+            autoResizeInput();
+        });
 
         msgInput.addEventListener(
             "keydown",

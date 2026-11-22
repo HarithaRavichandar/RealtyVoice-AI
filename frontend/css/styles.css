@@ -246,6 +246,82 @@ body {
 }
 
 
+/* ---- Typing Indicator -------------------------------------- */
+
+.typing-indicator {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0.75rem 1.2rem;
+    min-width: 60px;
+}
+
+.typing-dot {
+    width: 8px;
+    height: 8px;
+    background: #90a4ae;
+    border-radius: 50%;
+    animation: typing-bounce 1.4s ease-in-out infinite;
+}
+
+.typing-dot:nth-child(2) {
+    animation-delay: 0.16s;
+}
+
+.typing-dot:nth-child(3) {
+    animation-delay: 0.32s;
+}
+
+@keyframes typing-bounce {
+    0%, 60%, 100% {
+        transform: translateY(0);
+        opacity: 0.4;
+    }
+    30% {
+        transform: translateY(-6px);
+        opacity: 1;
+    }
+}
+
+
+/* ---- Error Toast ------------------------------------------- */
+
+.toast {
+    position: fixed;
+    bottom: 5rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    pointer-events: none;
+    max-width: 90%;
+    text-align: center;
+}
+
+.toast-visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+}
+
+.toast-error {
+    background: #d32f2f;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(211, 47, 47, 0.3);
+}
+
+.toast-success {
+    background: #2e7d32;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
+}
+
+
 /* ---- Loading Spinner --------------------------------------- */
 
 .spinner {
@@ -469,6 +545,9 @@ body {
     font-size: 1rem;
     line-height: 1.4;
     min-height: 2.5rem;
+    max-height: 144px;
+    overflow: hidden;
+    transition: height 0.1s ease;
     font-family: inherit;
 }
 
