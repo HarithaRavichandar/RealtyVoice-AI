@@ -65,6 +65,22 @@ AGENT_MAX_TOOL_ITERATIONS = _positive_int_env(
     4,
 )
 
+# ---------------------------------------------------------------------------
+# Application settings
+# ---------------------------------------------------------------------------
+
+DEBUG = os.getenv("DEBUG", "false").strip().lower() in ("1", "true", "yes")
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").strip().upper()
+
+# CORS: comma-separated list of allowed origins.
+# Default allows the local dev server only.
+_cors_raw = os.getenv("CORS_ORIGINS", "http://localhost:8000").strip()
+CORS_ORIGINS: list[str] = [
+    origin.strip()
+    for origin in _cors_raw.split(",")
+    if origin.strip()
+]
+
 __all__ = [
     "PROJECT_ROOT",
     "DATA_DIR",
@@ -76,5 +92,8 @@ __all__ = [
     "GROQ_BASE_URL",
     "GROQ_TIMEOUT_SECONDS",
     "AGENT_MAX_TOOL_ITERATIONS",
+    "DEBUG",
+    "LOG_LEVEL",
+    "CORS_ORIGINS",
 ]
 

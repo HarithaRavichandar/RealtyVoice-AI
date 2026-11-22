@@ -10,15 +10,65 @@ Provides:
 - /api/*         - Agent and conversation API
 """
 
+import logging
+import logging.config
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from sqlalchemy import text
 
+from .config import CORS_ORIGINS, DEBUG, LOG_LEVEL
 from .database import get_db
+
+
+# --------------------------------------------------
+# LOGGING
+# --------------------------------------------------
+
+LOGGING_CONFIG = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "standard": {
+            "format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+            "datefmt": "%Y-%m-%d %H:%M:%S",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "standard",
+            "stream": "ext://sys.stdout",
+        },
+    },
+    "root": {
+        "level": LOG_LEVEL,
+        "handlers": ["console"],
+    },
+    "loggers": {
+        "uvicorn": {"level": LOG_LEVEL, "handlers": ["console"], "propagate": False},
+        "sqlalchemy.engine": {"level": "WARNING", "handlers": ["console"], "propagate": False},
+    },
+}
+
+logging.config.dictConfig(LOGGING_CONFIG)
+logger = logging.getLogger(__name__)
+
+
+# --------------------------------------------------
+# LIFESPAN
+# --------------------------------------------------
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info("RealtyVoice AI starting up (debug=%s, log_level=%s)", DEBUG, LOG_LEVEL)
+    yield
+    logger.info("RealtyVoice AI shutting down")
 
 
 # --------------------------------------------------
@@ -27,7 +77,22 @@ from .database import get_db
 
 app = FastAPI(
     title="RealtyVoice AI",
-    version="0.1.0"
+    version="0.1.0",
+    debug=DEBUG,
+    lifespan=lifespan,
+)
+
+
+# --------------------------------------------------
+# CORS MIDDLEWARE
+# --------------------------------------------------
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"],
 )
 
 
