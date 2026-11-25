@@ -170,3 +170,15 @@ app.include_router(
     orchestrator_router,
     prefix="/api"
 )
+
+
+# --------------------------------------------------
+# VOICE API ROUTES (Sarvam STT + TTS)
+# --------------------------------------------------
+
+from .orchestrator.voice_router import voice_router
+
+app.include_router(
+    voice_router,
+    prefix="/api"
+)
