@@ -13,6 +13,7 @@ from backend.orchestrator.tools.schemas import (
     CreateCallbackRequest,
     RegisterLeadRequest,
     RecordConsentRequest,
+    NearbyAmenitiesRequest,
 )
 from backend.orchestrator.services.tool_registry import (
     TOOL_REGISTRY,
@@ -201,6 +202,7 @@ def test_tool_registry_contents():
         "create_callback_request": CreateCallbackRequest,
         "register_lead": RegisterLeadRequest,
         "record_consent": RecordConsentRequest,
+	"nearby_amenities": NearbyAmenitiesRequest,
     }
     assert set(TOOL_REGISTRY.keys()) == set(expected.keys())
     for name, schema in expected.items():
