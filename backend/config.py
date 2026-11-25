@@ -81,6 +81,26 @@ CORS_ORIGINS: list[str] = [
     if origin.strip()
 ]
 
+# ---------------------------------------------------------------------------
+# Sarvam AI (voice: STT + TTS)
+# ---------------------------------------------------------------------------
+
+SARVAM_API_KEY = os.getenv("SARVAM_API_KEY", "").strip()
+SARVAM_BASE_URL = os.getenv(
+    "SARVAM_BASE_URL",
+    "https://api.sarvam.ai",
+).rstrip("/")
+
+# ---------------------------------------------------------------------------
+# Mappls (location and amenity search)
+# ---------------------------------------------------------------------------
+
+MAPPLS_API_KEY = os.getenv("MAPPLS_API_KEY", "").strip()
+MAPPLS_BASE_URL = os.getenv(
+    "MAPPLS_BASE_URL",
+    "https://atlas.mappls.com/api",
+).rstrip("/")
+
 __all__ = [
     "PROJECT_ROOT",
     "DATA_DIR",
@@ -95,5 +115,9 @@ __all__ = [
     "DEBUG",
     "LOG_LEVEL",
     "CORS_ORIGINS",
+    "SARVAM_API_KEY",
+    "SARVAM_BASE_URL",
+    "MAPPLS_API_KEY",
+    "MAPPLS_BASE_URL",
 ]
 

@@ -58,6 +58,7 @@ class AgentResponse(BaseModel):
     session_id: str
     turn_id: int = Field(..., ge=0)
     reply: str
+    spoken_reply: str = Field("", description="Speech-friendly version of the reply, stripped of markdown and tables.")
     intent: Literal["property_search", "property_details", "callback_request", "general_question", "unknown"]
     requirements: CustomerRequirements = Field(default_factory=CustomerRequirements)
     matched_properties: List[PropertySearchItem] = Field(default_factory=list)

@@ -134,6 +134,7 @@ def test_agent_response_schema_fields_remain_unchanged():
         "session_id",
         "turn_id",
         "reply",
+        "spoken_reply",
         "intent",
         "requirements",
         "matched_properties",

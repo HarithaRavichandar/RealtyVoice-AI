@@ -32,6 +32,7 @@ from ..schemas import CustomerRequirements
 from .context_builder import build_context
 from .message import add_message, add_tool_message
 from .provider_tools import get_provider_tool_definitions
+from .speech_text import prepare_spoken_response
 from .tool_executor import execute_tool
 from .tool_registry import lookup_tool
 
@@ -119,6 +120,25 @@ CALLBACK REQUEST WORKFLOW:
 21. Never skip the lead registration or consent steps. The
     create_callback_request tool will fail if a lead or consent
     record is missing.
+
+VOICE RESPONSE RULES:
+
+22. When your response contains tables, comparison lists, or detailed
+    property listings, include a [SPOKEN]...[/SPOKEN] block at the end
+    with a short, conversational summary suitable for text-to-speech.
+    This block should:
+    - Be 1-3 sentences maximum.
+    - Mention key highlights (count, price range, locations) without
+      reading every row.
+    - Sound like a helpful sales agent speaking naturally.
+    - Never include markdown, tables, or formatting.
+    Example: [SPOKEN]I found three apartments in Whitefield ranging
+    from 68 lakh to 80 lakh. The best value is a 2BHK near the metro
+    at 68 lakh. Want me to tell you more about any of them?[/SPOKEN]
+
+23. For simple conversational replies (greetings, clarification
+    questions, short answers), do NOT include a [SPOKEN] block.
+    The system will use your reply directly for speech.
 """
 
 
@@ -131,6 +151,7 @@ class AgentRunResult:
     conversation_id: int
     turn_id: int
     reply: str
+    spoken_reply: str
     requirements: CustomerRequirements
     tool_results: list[dict[str, Any]]
     tool_iterations: int
@@ -412,19 +433,22 @@ async def run_agent_loop(
             )
 
             if not response.tool_calls:
-                reply = (response.content or "").strip()
+                raw_reply = (response.content or "").strip()
 
-                if not reply:
-                    reply = (
+                if not raw_reply:
+                    raw_reply = (
                         "I'm sorry, I couldn't prepare a response. "
                         "Could you please rephrase your request?"
                     )
+
+                display, spoken = prepare_spoken_response(raw_reply)
 
                 return AgentRunResult(
                     session_id=session_id,
                     conversation_id=conversation_id,
                     turn_id=turn_id,
-                    reply=reply,
+                    reply=display,
+                    spoken_reply=spoken,
                     requirements=_get_current_requirements(
                         session,
                         conversation_id,
@@ -545,6 +569,7 @@ async def run_agent_loop(
             conversation_id=conversation_id,
             turn_id=turn_id,
             reply=fallback_reply,
+            spoken_reply=fallback_reply,
             requirements=_get_current_requirements(
                 session,
                 conversation_id,

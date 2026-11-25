@@ -37,6 +37,7 @@ def _make_result(
         conversation_id=1,
         turn_id=1,
         reply=reply,
+        spoken_reply=reply,
         requirements=requirements or CustomerRequirements(),
         tool_results=tool_results or [],
         tool_iterations=1,

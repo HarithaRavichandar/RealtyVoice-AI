@@ -92,6 +92,7 @@ def test_agent_turn_persists_customer_and_assistant_messages(
             conversation_id=conversation.conversation_id,
             turn_id=1,
             reply="I can help you find a property.",
+            spoken_reply="I can help you find a property.",
             requirements=CustomerRequirements(),
             tool_results=[],
             tool_iterations=0,

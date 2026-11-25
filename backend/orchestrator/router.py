@@ -199,6 +199,7 @@ def _build_agent_response(
         session_id=result.session_id,
         turn_id=result.turn_id,
         reply=reply,
+        spoken_reply=result.spoken_reply,
         intent=intent,
         requirements=requirements,
         matched_properties=matched_properties,
