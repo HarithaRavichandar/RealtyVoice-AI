@@ -103,8 +103,8 @@ async def speech_to_text(
     """
     _require_sarvam_key()
 
-    # Validate content type
-    content_type = file.content_type or "application/octet-stream"
+    # Validate content type (strip codec params like ";codecs=opus")
+    content_type = (file.content_type or "application/octet-stream").split(";")[0].strip()
     if content_type not in _ACCEPTED_AUDIO_TYPES:
         raise HTTPException(
             status_code=415,
