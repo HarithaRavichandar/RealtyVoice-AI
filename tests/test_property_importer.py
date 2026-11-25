@@ -329,9 +329,10 @@ def test_apply_import_update_preserves_created_at(tmp_path, temp_session_factory
     session2 = temp_session_factory()
     prop2 = session2.query(Property).filter_by(source_record_id="syn-2").one()
     assert prop2.description == "Updated"
-    # created_at stays the same, updated_at changes
+    # created_at stays the same, updated_at changes (or equals when both
+    # run within the same clock tick — >= guards against that race).
     assert prop2.created_at == original_created
-    assert prop2.updated_at > prop2.created_at
+    assert prop2.updated_at >= prop2.created_at
     session2.close()
 
 # ---------------------------------------------------------------------------
