@@ -42,6 +42,14 @@ TOOL_DESCRIPTIONS = {
         "types: 'callback_contact' before creating a callback request, "
         "'contact_storage' before storing contact information."
     ),
+    "nearby_amenities": (
+        "Find nearby amenities and points of interest around a "
+        "location. Use this when the customer asks about hospitals, "
+        "schools, metro stations, parks, restaurants, or other "
+        "facilities near a property or area. Provide the location "
+        "name (e.g. 'Whitefield, Bengaluru') and optionally specify "
+        "which categories to search for."
+    ),
 }
 
 

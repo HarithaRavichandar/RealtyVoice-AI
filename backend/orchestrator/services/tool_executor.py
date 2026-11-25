@@ -20,6 +20,7 @@ The caller remains responsible for transaction management.
 
 from __future__ import annotations
 
+import logging
 from typing import Any, Dict, Optional
 
 from pydantic import ValidationError
@@ -32,7 +33,10 @@ from ..tools.schemas import (
     CreateCallbackRequest,
     RegisterLeadRequest,
     RecordConsentRequest,
+    NearbyAmenitiesRequest,
 )
+
+logger = logging.getLogger(__name__)
 
 from .conversation import update_temp_requirements
 
@@ -78,6 +82,9 @@ def execute_tool(
 
     elif tool_name == "record_consent":
         Schema = RecordConsentRequest
+
+    elif tool_name == "nearby_amenities":
+        Schema = NearbyAmenitiesRequest
 
     else:
         return {
@@ -385,6 +392,20 @@ def execute_tool(
         }
 
     # ---------------------------------------------------------------
+    # Nearby amenities (async — returns a deferred marker)
+    # ---------------------------------------------------------------
+    if tool_name == "nearby_amenities":
+        # This tool requires async execution via the Mappls API.
+        # Return a marker so the caller can run it asynchronously.
+        return {
+            "tool": tool_name,
+            "_async_pending": True,
+            "location": request.location,
+            "categories": request.categories,
+            "radius": request.radius,
+        }
+
+    # ---------------------------------------------------------------
     # Initialize property search service
     # Keep the caller's session alive.
     # ---------------------------------------------------------------
@@ -440,3 +461,85 @@ def execute_tool(
         "tool": tool_name,
         "property": detail.model_dump(mode="json"),
     }
+
+
+# -------------------------------------------------------------------
+# Async executor for tools that need async I/O (Mappls nearby)
+# -------------------------------------------------------------------
+
+async def execute_nearby_amenities(
+    location: str,
+    categories: list[str] | None = None,
+    radius: int = 3000,
+) -> Dict[str, Any]:
+    """Run the nearby_amenities tool asynchronously via Mappls API.
+
+    Returns a tool-result dict ready for the LLM context.
+    """
+    from backend.config import MAPPLS_API_KEY, MAPPLS_BASE_URL
+    from ..providers.mappls_provider import (
+        MappslsProvider,
+        MappslsError,
+    )
+
+    if not MAPPLS_API_KEY:
+        return {
+            "tool": "nearby_amenities",
+            "error": "mappls_not_configured",
+            "message": "Mappls API key is not configured.",
+        }
+
+    try:
+        async with MappslsProvider(
+            api_key=MAPPLS_API_KEY,
+            base_url=MAPPLS_BASE_URL,
+        ) as provider:
+            # Step 1: Geocode the location.
+            geo = await provider.geocode(location)
+
+            if geo is None:
+                return {
+                    "tool": "nearby_amenities",
+                    "error": "geocode_failed",
+                    "message": f"Could not find coordinates for '{location}'.",
+                }
+
+            # Step 2: Search nearby amenities.
+            results = await provider.nearby_amenities(
+                latitude=geo.latitude,
+                longitude=geo.longitude,
+                categories=categories,
+                radius=radius,
+            )
+
+            # Step 3: Format for the LLM.
+            amenities: Dict[str, Any] = {}
+
+            for cat_name, nearby_result in results.items():
+                amenities[cat_name] = [
+                    {
+                        "name": p.name,
+                        "distance_m": p.distance,
+                        "address": p.address,
+                    }
+                    for p in nearby_result.places
+                ]
+
+            return {
+                "tool": "nearby_amenities",
+                "location": location,
+                "coordinates": {
+                    "latitude": geo.latitude,
+                    "longitude": geo.longitude,
+                },
+                "address": geo.formatted_address,
+                "amenities": amenities,
+            }
+
+    except MappslsError as exc:
+        logger.warning("Mappls API error for '%s': %s", location, exc)
+        return {
+            "tool": "nearby_amenities",
+            "error": "mappls_api_error",
+            "message": str(exc),
+        }

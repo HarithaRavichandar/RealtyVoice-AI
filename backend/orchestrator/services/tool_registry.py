@@ -18,6 +18,7 @@ from ..tools.schemas import (
     CreateCallbackRequest,
     RegisterLeadRequest,
     RecordConsentRequest,
+    NearbyAmenitiesRequest,
 )
 
 # ---------------------------------------------------------------------------
@@ -69,6 +70,11 @@ TOOL_REGISTRY: Dict[str, ToolInfo] = {
     "record_consent": ToolInfo(
         name="record_consent",
         input_schema=RecordConsentRequest,
+        implementation=None,
+    ),
+    "nearby_amenities": ToolInfo(
+        name="nearby_amenities",
+        input_schema=NearbyAmenitiesRequest,
         implementation=None,
     ),
 }

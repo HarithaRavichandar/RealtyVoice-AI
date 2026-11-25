@@ -346,6 +346,53 @@ class RecordConsentRequest(BaseModel):
         return value
 
 
+# ---------------------------------------------------------------------------
+# 7. NearbyAmenitiesRequest
+# ---------------------------------------------------------------------------
+
+class NearbyAmenitiesRequest(BaseModel):
+    """Input for the nearby_amenities tool.
+
+    Finds nearby points-of-interest around a property location using
+    the Mappls API.  The agent should supply the location name (which
+    will be geocoded) and optionally a list of amenity categories.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    location: str = Field(
+        ...,
+        min_length=1,
+        description=(
+            "Location or address to search around, "
+            "e.g. 'Whitefield, Bengaluru'"
+        ),
+    )
+
+    categories: Optional[list[str]] = Field(
+        default=None,
+        description=(
+            "Amenity categories to search for. "
+            "Options: hospital, school, metro, park, restaurant, "
+            "supermarket, atm, pharmacy, gym, mall, bus_stop, bank. "
+            "Defaults to a standard real-estate set if omitted."
+        ),
+    )
+
+    radius: Optional[int] = Field(
+        default=3000,
+        ge=100,
+        le=50000,
+        description="Search radius in metres (100–50000, default 3000)",
+    )
+
+    # Reject whitespace-only location.
+    _ws_location = field_validator(
+        "location",
+        mode="before",
+    )(_reject_whitespace)
+
+
 __all__ = [
     "SearchPropertiesRequest",
     "GetPropertyDetailsRequest",
@@ -353,4 +400,5 @@ __all__ = [
     "CreateCallbackRequest",
     "RegisterLeadRequest",
     "RecordConsentRequest",
+    "NearbyAmenitiesRequest",
 ]

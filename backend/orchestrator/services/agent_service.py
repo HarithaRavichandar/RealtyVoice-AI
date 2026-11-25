@@ -33,7 +33,7 @@ from .context_builder import build_context
 from .message import add_message, add_tool_message
 from .provider_tools import get_provider_tool_definitions
 from .speech_text import prepare_spoken_response
-from .tool_executor import execute_tool
+from .tool_executor import execute_tool, execute_nearby_amenities
 from .tool_registry import lookup_tool
 
 logger = logging.getLogger(__name__)
@@ -319,7 +319,7 @@ async def _chat_with_retry(
     raise last_error  # type: ignore[misc]
 
 
-def _execute_registered_tool(
+async def _execute_registered_tool(
     session: Session,
     conversation_id: int,
     turn_id: int,
@@ -344,6 +344,15 @@ def _execute_registered_tool(
             payload=arguments,
             conversation_id=conversation_id,
         )
+
+        # Handle async tools (e.g. nearby_amenities via Mappls API).
+        if result.get("_async_pending"):
+            if tool_name == "nearby_amenities":
+                result = await execute_nearby_amenities(
+                    location=result["location"],
+                    categories=result.get("categories"),
+                    radius=result.get("radius", 3000),
+                )
 
     status = _tool_result_status(result)
     error = result.get("error")
@@ -489,7 +498,7 @@ async def run_agent_loop(
             # Execute tool calls sequentially. Parallel execution is
             # intentionally disabled for the selected Groq model.
             for tool_call in response.tool_calls:
-                result = _execute_registered_tool(
+                result = await _execute_registered_tool(
                     session=session,
                     conversation_id=conversation_id,
                     turn_id=turn_id,
