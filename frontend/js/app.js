@@ -16,6 +16,7 @@
  * - Error toast notifications
  * - Auto-resize textarea
  * - Enter / Shift+Enter keyboard handling
+ * - Voice input/output via Sarvam AI (STT + TTS)
  */
 
 // ==================================================
@@ -34,6 +35,9 @@ const requirementsList = document.getElementById("requirements-list");
 const propertiesPanel = document.getElementById("properties");
 const propertiesList = document.getElementById("properties-list");
 
+const micBtn = document.getElementById("mic-btn");
+const voiceStatusEl = document.getElementById("voice-status");
+
 const SESSION_STORAGE_KEY = "session_id";
 
 // ==================================================
@@ -42,6 +46,12 @@ const SESSION_STORAGE_KEY = "session_id";
 
 let sessionId = null;
 let busy = false;
+
+// Voice state: "idle" | "listening" | "thinking" | "speaking"
+let voiceState = "idle";
+let mediaRecorder = null;
+let audioChunks = [];
+let currentAudio = null;
 
 // ==================================================
 // 3. FORMATTING HELPERS
@@ -1041,6 +1051,8 @@ async function sendMessage(message) {
 
         setStatus("Connected", true);
 
+        return data;
+
     } catch (error) {
         console.error("Message sending failed:", error);
 
@@ -1062,6 +1074,8 @@ async function sendMessage(message) {
 
         setStatus("Request failed", false);
 
+        return null;
+
     } finally {
         busy = false;
 
@@ -1078,7 +1092,219 @@ async function sendMessage(message) {
 }
 
 // ==================================================
-// 14. EVENT HANDLERS
+// 14. VOICE MODULE
+// ==================================================
+
+function setVoiceState(state) {
+    voiceState = state;
+
+    if (micBtn) {
+        micBtn.classList.remove("listening", "thinking", "speaking");
+        if (state !== "idle") {
+            micBtn.classList.add(state);
+        }
+    }
+
+    if (voiceStatusEl) {
+        voiceStatusEl.classList.remove("active", "listening", "thinking", "speaking");
+
+        const labels = {
+            listening: "Listening…",
+            thinking: "Processing…",
+            speaking: "Speaking…"
+        };
+
+        if (labels[state]) {
+            voiceStatusEl.textContent = labels[state];
+            voiceStatusEl.classList.add("active", state);
+        }
+    }
+}
+
+function stopCurrentAudio() {
+    if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+        currentAudio = null;
+    }
+}
+
+async function startListening() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+        audioChunks = [];
+
+        // Prefer webm/opus; fall back to whatever the browser supports.
+        const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+            ? "audio/webm;codecs=opus"
+            : "";
+
+        mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : {});
+
+        mediaRecorder.addEventListener("dataavailable", (event) => {
+            if (event.data.size > 0) {
+                audioChunks.push(event.data);
+            }
+        });
+
+        mediaRecorder.addEventListener("stop", () => {
+            // Release the microphone.
+            stream.getTracks().forEach((track) => track.stop());
+
+            const audioBlob = new Blob(audioChunks, {
+                type: mediaRecorder.mimeType || "audio/webm"
+            });
+
+            if (audioBlob.size > 0) {
+                processVoiceInput(audioBlob);
+            } else {
+                setVoiceState("idle");
+            }
+        });
+
+        mediaRecorder.start();
+        setVoiceState("listening");
+
+    } catch (error) {
+        console.error("Microphone access failed:", error);
+        showToast("Microphone access denied. Please allow microphone permissions.", "error");
+        setVoiceState("idle");
+    }
+}
+
+function stopListening() {
+    if (mediaRecorder && mediaRecorder.state === "recording") {
+        mediaRecorder.stop();
+    }
+}
+
+async function processVoiceInput(audioBlob) {
+    setVoiceState("thinking");
+
+    try {
+        // Step 1: Speech-to-text.
+        const formData = new FormData();
+        formData.append("file", audioBlob, "recording.webm");
+        formData.append("language", "unknown"); // Auto-detect language.
+
+        const sttResponse = await fetch("/api/voice/stt", {
+            method: "POST",
+            body: formData
+        });
+
+        if (!sttResponse.ok) {
+            const errorData = await sttResponse.json().catch(() => ({}));
+            throw new Error(errorData.detail || `STT failed: HTTP ${sttResponse.status}`);
+        }
+
+        const sttResult = await sttResponse.json();
+        const transcript = sttResult.transcript;
+
+        if (!transcript || !transcript.trim()) {
+            showToast("Could not understand audio. Please try again.", "error");
+            setVoiceState("idle");
+            return;
+        }
+
+        // Step 2: Send transcript to the agent (reuse sendMessage).
+        const agentData = await sendMessage(transcript);
+
+        // Step 3: Text-to-speech on the spoken_reply (or reply fallback).
+        if (agentData) {
+            const spokenText = agentData.spoken_reply || agentData.reply;
+            const detectedLang = sttResult.language_code || "en-IN";
+
+            await playTTS(spokenText, detectedLang);
+        }
+
+        setVoiceState("idle");
+
+    } catch (error) {
+        console.error("Voice processing failed:", error);
+        showToast(error.message || "Voice processing failed.", "error");
+        setVoiceState("idle");
+    }
+}
+
+async function playTTS(text, languageCode) {
+    if (!text || !text.trim()) return;
+
+    setVoiceState("speaking");
+
+    try {
+        // Map STT language codes to TTS-supported codes.
+        // TTS supports: bn-IN, en-IN, gu-IN, hi-IN, kn-IN, ml-IN, mr-IN, od-IN, pa-IN, ta-IN, te-IN
+        const ttsLang = languageCode && languageCode.includes("-")
+            ? languageCode
+            : "en-IN";
+
+        const ttsResponse = await fetch("/api/voice/tts", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                text: text.slice(0, 2500),
+                language_code: ttsLang
+            })
+        });
+
+        if (!ttsResponse.ok) {
+            console.warn("TTS failed, skipping audio playback.");
+            return;
+        }
+
+        const audioBuffer = await ttsResponse.arrayBuffer();
+        const audioBlob = new Blob([audioBuffer], { type: "audio/mpeg" });
+        const audioUrl = URL.createObjectURL(audioBlob);
+
+        stopCurrentAudio();
+
+        currentAudio = new Audio(audioUrl);
+
+        currentAudio.addEventListener("ended", () => {
+            URL.revokeObjectURL(audioUrl);
+            currentAudio = null;
+            setVoiceState("idle");
+        });
+
+        currentAudio.addEventListener("error", () => {
+            URL.revokeObjectURL(audioUrl);
+            currentAudio = null;
+            setVoiceState("idle");
+        });
+
+        await currentAudio.play();
+
+    } catch (error) {
+        console.warn("TTS playback failed:", error);
+        setVoiceState("idle");
+    }
+}
+
+function handleMicClick() {
+    switch (voiceState) {
+        case "idle":
+            startListening();
+            break;
+
+        case "listening":
+            stopListening();
+            break;
+
+        case "speaking":
+            // Barge-in: stop playback and return to idle.
+            stopCurrentAudio();
+            setVoiceState("idle");
+            break;
+
+        case "thinking":
+            // Ignore clicks while processing.
+            break;
+    }
+}
+
+// ==================================================
+// 15. EVENT HANDLERS
 // ==================================================
 
 function handleSendClick() {
@@ -1122,7 +1348,7 @@ function initializeSuggestionButtons() {
 }
 
 // ==================================================
-// 15. APPLICATION INITIALIZATION
+// 16. APPLICATION INITIALIZATION
 // ==================================================
 
 async function init() {
@@ -1146,6 +1372,11 @@ async function init() {
         );
     }
 
+    // Microphone button.
+    if (micBtn) {
+        micBtn.addEventListener("click", handleMicClick);
+    }
+
     // Suggested prompts.
     initializeSuggestionButtons();
 
@@ -1159,7 +1390,7 @@ async function init() {
 }
 
 // ==================================================
-// 16. DOM READY
+// 17. DOM READY
 // ==================================================
 
 window.addEventListener("DOMContentLoaded", init);

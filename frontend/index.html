@@ -42,7 +42,7 @@
         </section>
     </main>
 
-    <!-- Input bar with textarea, send button, and microphone placeholder -->
+    <!-- Input bar with textarea, send button, and microphone -->
     <footer class="input-bar" role="form" aria-label="Message input">
         <label for="msg-input" class="visually-hidden">Your message</label>
         <textarea id="msg-input"
@@ -52,10 +52,13 @@
                   aria-label="Message input"
                   aria-multiline="true"></textarea>
         <button id="send-btn" class="send-btn" type="button" disabled>Send</button>
-        <button id="mic-btn" class="mic-btn" type="button" title="Voice input (not yet implemented)" disabled aria-label="Microphone placeholder">
-            🎤
+        <button id="mic-btn" class="mic-btn" type="button" title="Tap to speak" aria-label="Voice input">
+            <span id="mic-icon" class="mic-icon">🎤</span>
         </button>
     </footer>
+
+    <!-- Voice status indicator -->
+    <div id="voice-status" class="voice-status" aria-live="polite"></div>
 
     <script src="/static/js/app.js" type="module"></script>
 </body>

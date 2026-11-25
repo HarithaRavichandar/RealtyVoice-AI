@@ -581,6 +581,86 @@ body {
 }
 
 
+/* ---- Voice UI States ---------------------------------------- */
+
+.mic-btn {
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    position: relative;
+}
+
+.mic-btn.listening {
+    background: #d32f2f;
+    animation: mic-pulse 1.5s ease-in-out infinite;
+}
+
+.mic-btn.thinking {
+    background: #f57c00;
+    animation: mic-spin-border 1s linear infinite;
+}
+
+.mic-btn.speaking {
+    background: #2e7d32;
+    animation: mic-speak 1.2s ease-in-out infinite;
+}
+
+@keyframes mic-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(211, 47, 47, 0.5); }
+    50% { box-shadow: 0 0 0 10px rgba(211, 47, 47, 0); }
+}
+
+@keyframes mic-spin-border {
+    0% { box-shadow: 2px 0 0 2px #f57c00; }
+    25% { box-shadow: 0 2px 0 2px #f57c00; }
+    50% { box-shadow: -2px 0 0 2px #f57c00; }
+    75% { box-shadow: 0 -2px 0 2px #f57c00; }
+    100% { box-shadow: 2px 0 0 2px #f57c00; }
+}
+
+@keyframes mic-speak {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(46, 125, 50, 0.4); }
+    50% { box-shadow: 0 0 0 8px rgba(46, 125, 50, 0); }
+}
+
+.voice-status {
+    position: fixed;
+    bottom: 4.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0.4rem 1rem;
+    border-radius: 16px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    z-index: 999;
+}
+
+.voice-status.active {
+    opacity: 1;
+}
+
+.voice-status.listening {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.voice-status.thinking {
+    background: #fff3e0;
+    color: #e65100;
+}
+
+.voice-status.speaking {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+
 /* ---- Accessibility ------------------------------------------ */
 
 button:focus-visible {
