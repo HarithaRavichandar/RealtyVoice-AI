@@ -48,8 +48,9 @@ def build_match_summary(
     if possession_before:
         hit("possession_before", possession_before, item.possession_date.date())
 
-    low = item.price_min if item.price_min is not None else item.listing_price
-    high = item.price_max if item.price_max is not None else item.listing_price
+    # Same preference order as the search filter's price interval.
+    low = next((v for v in (item.price_min, item.listing_price, item.price_max) if v is not None), None)
+    high = next((v for v in (item.price_max, item.listing_price, item.price_min) if v is not None), None)
     if low is not None and high is not None:
         actual = _fmt(low) if low == high else f"{_fmt(low)}-{_fmt(high)}"
         if min_budget is not None or max_budget is not None:

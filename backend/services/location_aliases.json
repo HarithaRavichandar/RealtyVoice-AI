@@ -1,0 +1,31 @@
+{
+  "_comment": "Groups of names that refer to the same Indian city. Matching treats every member of a group as equivalent (case, spaces and punctuation are ignored). To add an alias, append a name to an existing group or add a new group of two or more names. A name may appear in only one group. Aliases only help matching; they never create inventory, and suggestions are always generated from the locations actually present in the database.",
+  "groups": [
+    ["Bangalore", "Bengaluru", "Bengalooru", "Bangaluru"],
+    ["Gurgaon", "Gurugram"],
+    ["Mumbai", "Bombay"],
+    ["Kolkata", "Calcutta"],
+    ["Chennai", "Madras"],
+    ["New Delhi", "Delhi"],
+    ["Visakhapatnam", "Vishakhapatnam", "Vizag"],
+    ["Pune", "Poona"],
+    ["Kochi", "Cochin"],
+    ["Trichy", "Tiruchirappalli", "Tiruchchirappalli"],
+    ["Vadodara", "Baroda"],
+    ["Varanasi", "Benares", "Banaras"],
+    ["Allahabad", "Prayagraj"],
+    ["Trivandrum", "Thiruvananthapuram"],
+    ["Mangalore", "Mangaluru"],
+    ["Mysore", "Mysuru"],
+    ["Belgaum", "Belagavi"],
+    ["Pondicherry", "Puducherry"],
+    ["Kozhikode", "Calicut"],
+    ["Bhubaneswar", "Bhubaneshwar"],
+    ["Guwahati", "Gauhati"],
+    ["Thrissur", "Trichur"],
+    ["Shimla", "Simla"],
+    ["Ahmadnagar", "Ahmednagar"],
+    ["Vrindavan", "Vrindaban", "Brindavan"],
+    ["Panaji", "Panjim"]
+  ]
+}

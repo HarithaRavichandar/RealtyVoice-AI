@@ -583,3 +583,83 @@ def test_audit_trail_records_what_the_model_sent_and_what_was_applied(chat):
     assert search.tool_status == "success"
     assert search.tool_arguments == {}  # exactly what the model sent
     assert set(search.tool_result["applied_defaults"]) == {"configuration", "max_budget", "location"}
+
+
+# ---------------------------------------------------------------------------
+# Phase 3 exit criterion: qualify, match, consent, callback, revoke
+# ---------------------------------------------------------------------------
+
+def test_lead_is_qualified_matched_and_taken_through_consent_and_callback(chat):
+    from backend.models import CallbackRequest, Lead
+
+    sid = chat.new_session()
+
+    chat.turn(
+        sid,
+        "2 BHK in Bengaluru, 50 to 80 lakh, I want to buy within 3 months",
+        tool("update_customer_requirements", {
+            "location": "Bengaluru", "configuration": "2 BHK",
+            "budget_min": "5000000", "budget_max": "8000000",
+            "purchase_timeline": "within 3 months",
+        }),
+        say("Great. Shall I share what suits you best?"),
+    )
+
+    r2 = chat.turn(
+        sid,
+        "What would you recommend?",
+        tool("recommend_properties", {"limit": 3}),
+        say("The best fit is a 2 BHK in Bengaluru."),
+    )
+    assert _ids(r2) == {chat.ids["A"]}
+    rec = chat.tool_payloads(key="match_score")[0]
+    assert rec["items"][0]["match_score"] == 100
+    assert r2["next_action"]["action"] == "show_properties"
+
+    chat.turn(
+        sid,
+        "My name is Asha, number 9876543210. Please call me tomorrow at 10.",
+        tool("register_lead", {"customer_name": "Asha", "phone": "9876543210"}),
+        tool("record_consent", {"consent_type": "callback_contact", "granted": True}),
+        tool("create_callback_request", {
+            "preferred_contact": "phone_call", "preferred_date": "2026-12-05",
+            "preferred_time": "10:00", "reason": "Discuss the 2 BHK",
+        }),
+        say("Your callback is booked."),
+    )
+
+    with chat.session_factory() as db:
+        lead = db.query(Lead).one()
+        assert lead.buyer_intent == "callback_requesting"
+        # budget 25 + one data label 20 + 3 months 16 + phone 10 + name 5 + callback 15
+        assert float(lead.qualification_score) == 91
+        assert lead.qualification_status == "Hot"
+        assert lead.purchase_timeline == "within_3_months"
+        assert db.query(CallbackRequest).one().status == "Pending"
+        assert len(lead.property_matches) == 1
+
+    # Asking again for the same slot does not create a second callback.
+    chat.turn(
+        sid,
+        "Please call me tomorrow at 10",
+        tool("create_callback_request", {
+            "preferred_contact": "phone_call", "preferred_date": "2026-12-05",
+            "preferred_time": "10:00", "reason": "Discuss the 2 BHK",
+        }),
+        say("That callback is already booked."),
+    )
+    assert chat.tool_payloads(key="outcome")[0]["outcome"] == "duplicate"
+
+    # The customer withdraws consent: the callback is cancelled and the score drops.
+    chat.turn(
+        sid,
+        "Actually, please don't call me",
+        tool("record_consent", {"consent_type": "callback_contact", "granted": False}),
+        say("Understood, I have cancelled the callback."),
+    )
+    with chat.session_factory() as db:
+        lead = db.query(Lead).one()
+        assert db.query(CallbackRequest).one().status == "Cancelled"
+        assert lead.buyer_intent == "actively_searching"
+        assert float(lead.qualification_score) == 76
+        assert lead.score_breakdown["callback_request"]["points"] == 0

@@ -67,6 +67,13 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("RealtyVoice AI starting up (debug=%s, log_level=%s)", DEBUG, LOG_LEVEL)
+    try:
+        from backend.database import engine
+        from backend.services.schema_upgrades import ensure_lead_qualification_columns
+
+        ensure_lead_qualification_columns(engine)
+    except Exception:  # never block startup on an optional upgrade
+        logger.exception("Lead qualification schema upgrade failed")
     yield
     logger.info("RealtyVoice AI shutting down")
 

@@ -19,6 +19,7 @@ from ..tools.schemas import (
     RegisterLeadRequest,
     RecordConsentRequest,
     NearbyAmenitiesRequest,
+    RecommendPropertiesRequest,
 )
 
 # ---------------------------------------------------------------------------
@@ -75,6 +76,11 @@ TOOL_REGISTRY: Dict[str, ToolInfo] = {
     "nearby_amenities": ToolInfo(
         name="nearby_amenities",
         input_schema=NearbyAmenitiesRequest,
+        implementation=None,
+    ),
+    "recommend_properties": ToolInfo(
+        name="recommend_properties",
+        input_schema=RecommendPropertiesRequest,
         implementation=None,
     ),
 }

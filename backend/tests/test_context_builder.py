@@ -34,6 +34,9 @@ def test_empty_history_and_missing_requirements(dbsession: Session):
         "configuration": None,
         "possession_before": None,
         "availability": None,
+        "purchase_timeline": None,
+        "visit_readiness": None,
+        "contact_preference": None,
     }
 
 
@@ -122,6 +125,9 @@ def test_invalid_requirements_type_and_values(dbsession: Session):
         "configuration": None,
         "possession_before": None,
         "availability": None,
+        "purchase_timeline": None,
+        "visit_readiness": None,
+        "contact_preference": None,
     }
 
     # Now store a dict with invalid budget values
@@ -138,6 +144,9 @@ def test_invalid_requirements_type_and_values(dbsession: Session):
         "configuration": None,
         "possession_before": None,
         "availability": None,
+        "purchase_timeline": None,
+        "visit_readiness": None,
+        "contact_preference": None,
     }
 
 

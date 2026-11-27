@@ -20,7 +20,12 @@ TOOL_DESCRIPTIONS = {
     "update_customer_requirements": (
         "Save or update the customer's explicitly stated property "
         "requirements, such as budget, location, property type, "
-        "configuration, possession date, or availability. To remove a "
+        "configuration, possession date, or availability, and the "
+        "customer's qualification details: purchase_timeline "
+        "(immediate, within_3_months, within_6_months, within_12_months, "
+        "later, exploring), visit_readiness (ready_to_visit, considering, "
+        "not_ready) and contact_preference (phone_call, whatsapp, sms, "
+        "email). Save these only when the customer has said them. To remove a "
         "requirement the customer has withdrawn, pass that field as null. "
         "The budget minimum cannot exceed the maximum."
     ),
@@ -45,6 +50,14 @@ TOOL_DESCRIPTIONS = {
         "for permission before calling this tool. Required consent "
         "types: 'callback_contact' before creating a callback request, "
         "'contact_storage' before storing contact information."
+    ),
+    "recommend_properties": (
+        "Rank properties against ALL of the customer's saved requirements "
+        "(location, budget range, configuration, property type, possession, "
+        "availability) and return the best matches with a 0-100 match score "
+        "and a per-criterion explanation. Use this when the customer asks "
+        "what you recommend or which properties suit them best; use "
+        "search_properties for a plain filtered listing."
     ),
     "nearby_amenities": (
         "Find nearby amenities and points of interest around a "

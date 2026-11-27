@@ -28,6 +28,7 @@ from ..tools.schemas import (
     RegisterLeadRequest,
     RecordConsentRequest,
     NearbyAmenitiesRequest,
+    RecommendPropertiesRequest,
 )
 
 logger = logging.getLogger(__name__)
@@ -44,6 +45,9 @@ from ...models import (
 from backend.services.property_search import PropertySearchService
 from backend.services.location_normalizer import suggest_locations
 from backend.services.match_summary import build_match_summary
+from backend.services.callbacks import cancel_open_callbacks, create_or_reschedule
+from backend.services.lead_matching import match_properties, save_matches
+from backend.services.lead_qualification import refresh_lead_qualification
 from backend.schemas.property_search import (
     PropertySearchItem,
     PropertyDetailResponse,
@@ -129,6 +133,29 @@ def _location_suggestions(
     return suggest_locations(location, service.distinct_locations())
 
 
+def _link_current_matches(
+    session: Session, conversation: Conversation, lead_id: int
+) -> None:
+    """Store the best current matches for a newly registered lead.
+
+    Recommendations made before the customer shared contact details would
+    otherwise never be linked to their lead. Best effort: it must not block
+    registration.
+    """
+    try:
+        saved = CustomerRequirements.model_validate(
+            conversation.temp_requirements or {}
+        ).model_dump(mode="python")
+        if any(
+            saved.get(f) is not None
+            for f in ("location", "budget_min", "budget_max", "property_type",
+                      "configuration", "possession_before", "availability")
+        ):
+            save_matches(session, lead_id, match_properties(session, saved, limit=5))
+    except Exception:  # noqa: BLE001
+        logger.exception("Could not store property matches for new lead")
+
+
 def execute_tool(
     session: Session,
     tool_name: str,
@@ -154,6 +181,8 @@ def execute_tool(
         Schema = RecordConsentRequest
     elif tool_name == "nearby_amenities":
         Schema = NearbyAmenitiesRequest
+    elif tool_name == "recommend_properties":
+        Schema = RecommendPropertiesRequest
     else:
         return {"error": "unknown_tool", "tool": tool_name}
 
@@ -221,7 +250,11 @@ def execute_tool(
                 "tool": tool_name,
                 "conversation_id": conversation_id,
             }
-        return {"tool": tool_name, "requirements": conversation.temp_requirements}
+        response = {"tool": tool_name, "requirements": conversation.temp_requirements}
+        qualification = refresh_lead_qualification(session, conversation)
+        if qualification is not None:
+            response["lead_qualification"] = qualification
+        return response
 
     # ---------------------------------------------------------------
     # Create callback request
@@ -268,18 +301,19 @@ def execute_tool(
                 "tool": tool_name,
                 "conversation_id": conversation_id,
             }
-        callback = CallbackRequest(
+        callback, outcome = create_or_reschedule(
+            session,
             lead_id=lead.lead_id,
             conversation_id=conversation_id,
             preferred_contact=request.preferred_contact,
-            preferred_date=request.preferred_date.isoformat(),
+            preferred_date=request.preferred_date,
             preferred_time=request.preferred_time,
             reason=request.reason,
         )
-        session.add(callback)
-        session.flush()
+        refresh_lead_qualification(session, conversation)
         return {
             "tool": tool_name,
+            "outcome": outcome,
             "callback": {
                 "callback_id": callback.callback_id,
                 "lead_id": callback.lead_id,
@@ -315,6 +349,7 @@ def execute_tool(
                 if request.email is not None:
                     lead.email = request.email
                 session.flush()
+                refresh_lead_qualification(session, conversation)
                 return {
                     "tool": tool_name,
                     "lead": {
@@ -337,6 +372,9 @@ def execute_tool(
             property_type=temp_req.get("property_type"),
             configuration=temp_req.get("configuration"),
             possession_preference=temp_req.get("possession_before"),
+            purchase_timeline=temp_req.get("purchase_timeline"),
+            visit_readiness=temp_req.get("visit_readiness"),
+            contact_preference=temp_req.get("contact_preference"),
             qualification_status="Unqualified",
             pipeline_status="New",
         )
@@ -344,6 +382,8 @@ def execute_tool(
         session.flush()
         conversation.lead_id = lead.lead_id
         session.flush()
+        _link_current_matches(session, conversation, lead.lead_id)
+        refresh_lead_qualification(session, conversation)
         return {
             "tool": tool_name,
             "lead": {
@@ -389,13 +429,68 @@ def execute_tool(
         )
         session.add(consent)
         session.flush()
-        return {
+        response = {
             "tool": tool_name,
             "consent": {
                 "consent_id": consent.consent_id,
                 "lead_id": consent.lead_id,
                 "consent_type": consent.consent_type,
                 "granted": consent.granted,
+            },
+        }
+        if not request.granted:
+            # Revocation takes effect immediately.
+            if request.consent_type == "callback_contact":
+                response["cancelled_callback_ids"] = cancel_open_callbacks(
+                    session, lead.lead_id
+                )
+            elif request.consent_type == "contact_storage":
+                response["contact_storage_revoked"] = True
+        refresh_lead_qualification(session, conversation)
+        return response
+
+    # ---------------------------------------------------------------
+    # Recommend properties (rank against all saved requirements)
+    # ---------------------------------------------------------------
+    if tool_name == "recommend_properties":
+        if conversation_id is None:
+            return {"error": "missing_conversation_id", "tool": tool_name}
+        conversation = session.get(Conversation, conversation_id)
+        if conversation is None:
+            return {
+                "error": "conversation_not_found",
+                "tool": tool_name,
+                "conversation_id": conversation_id,
+            }
+        try:
+            saved = CustomerRequirements.model_validate(
+                conversation.temp_requirements or {}
+            ).model_dump(mode="python")
+        except ValidationError:
+            return {"error": "requirements_invalid", "tool": tool_name}
+        criteria_fields = (
+            "location", "budget_min", "budget_max", "property_type",
+            "configuration", "possession_before", "availability",
+        )
+        if not any(saved.get(f) is not None for f in criteria_fields):
+            return {"error": "no_requirements", "tool": tool_name}
+        results = match_properties(session, saved, limit=request.limit)
+        if conversation.lead_id is not None:
+            save_matches(session, conversation.lead_id, results)
+        items = []
+        for r in results:
+            item = PropertySearchItem.model_validate(r.prop).model_dump(mode="json")
+            item["match_score"] = r.score
+            item["criteria"] = [c.as_dict() for c in r.criteria]
+            items.append(item)
+        return {
+            "tool": tool_name,
+            "total": len(items),
+            "items": items,
+            "requirements_used": {
+                f: (str(saved[f]) if saved.get(f) is not None else None)
+                for f in criteria_fields
+                if saved.get(f) is not None
             },
         }
 

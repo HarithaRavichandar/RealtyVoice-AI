@@ -15,6 +15,7 @@ from backend.orchestrator.tools.schemas import (
     RegisterLeadRequest,
     RecordConsentRequest,
     NearbyAmenitiesRequest,
+    RecommendPropertiesRequest,
 )
 from backend.orchestrator.services.tool_registry import (
     TOOL_REGISTRY,
@@ -232,6 +233,7 @@ def test_tool_registry_contents():
         "register_lead": RegisterLeadRequest,
         "record_consent": RecordConsentRequest,
 	"nearby_amenities": NearbyAmenitiesRequest,
+	"recommend_properties": RecommendPropertiesRequest,
     }
     assert set(TOOL_REGISTRY.keys()) == set(expected.keys())
     for name, schema in expected.items():
@@ -249,3 +251,4 @@ def test_lookup_tool_success():
 def test_lookup_tool_failure():
     with pytest.raises(KeyError, match="Tool 'nonexistent' not found in registry"):
         lookup_tool("nonexistent")
+

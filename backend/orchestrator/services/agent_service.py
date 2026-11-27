@@ -256,6 +256,36 @@ EXPLAINING RECOMMENDATIONS:
     is larger than the items shown, say how many matched overall. If
     nothing matched, say so and follow the location and availability
     guidance above instead of describing unrelated properties.
+
+LEAD QUALIFICATION, MATCHING AND CALLBACKS:
+
+42. When the customer says how soon they want to buy, whether they
+    would visit a property, or how they prefer to be contacted, save it
+    with update_customer_requirements (purchase_timeline,
+    visit_readiness, contact_preference). Save only what they actually
+    said. Never guess these or tell the customer their score, status or
+    buyer category; those are internal.
+
+43. When the customer asks what you recommend or which properties suit
+    them best, call recommend_properties. Each result has a match_score
+    (0-100) and per-criterion statuses. Say which criteria match, and
+    state every "partial", "mismatch" or "unknown" criterion plainly
+    (for example "slightly over your budget" or "possession date not
+    listed"). Never describe a partial or mismatched property as a
+    perfect fit.
+
+44. If create_callback_request returns outcome "duplicate", tell the
+    customer the same callback is already booked. If it returns
+    "rescheduled", tell them the existing request was moved to the new
+    time and must be confirmed again. Never say a second callback was
+    created.
+
+45. If the customer withdraws callback consent, call record_consent with
+    consent_type='callback_contact' and granted=false immediately. If
+    cancelled_callback_ids is returned, tell them their pending callback
+    was cancelled. If they withdraw contact_storage consent, confirm that
+    you will no longer use their contact details for follow-up and do
+    not ask for them again unless they re-consent.
 """
 
 
@@ -366,6 +396,15 @@ _TOOL_ERROR_HINTS: dict[str, str] = {
     "validation": (
         "The tool arguments were invalid. Check the required fields "
         "and correct the values before retrying."
+    ),
+    "no_requirements": (
+        "Nothing has been saved yet to rank against. Ask what the customer "
+        "is looking for (location, budget, size) and save it with "
+        "update_customer_requirements first."
+    ),
+    "requirements_invalid": (
+        "The saved requirements are inconsistent. Ask the customer to "
+        "confirm their budget range, save it again, then retry."
     ),
     "requirements_conflict": (
         "The update conflicts with the saved requirements (for example the "

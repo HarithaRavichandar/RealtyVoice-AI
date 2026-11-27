@@ -154,7 +154,7 @@ def _build_agent_response(
             property_ids=property_ids,
         )
 
-    elif "search_properties" in tool_names:
+    elif "search_properties" in tool_names or "recommend_properties" in tool_names:
         intent = "property_search"
 
         next_action = NextAction(

@@ -5,12 +5,14 @@ Fields:
 - customer_name, phone, email: nullable strings
 - budget_min, budget_max: Numeric (INR) nullable (allow progressive creation)
 - preferred_location, property_type, configuration, possession_preference: nullable strings
+- purchase_timeline, visit_readiness, contact_preference, buyer_intent: nullable strings
+- score_breakdown: JSON nullable (per-signal points behind qualification_score)
 - qualification_score: Numeric nullable
 - qualification_status: Enum (Hot, Warm, Cold, Unqualified) not nullable
 - pipeline_status: Enum (New, Contacted, Visit Scheduled, Negotiation, Converted, Lost) not nullable
 - created_at, updated_at: DateTime UTC
 """
-from sqlalchemy import Column, Integer, String, Numeric, DateTime, Enum, Index
+from sqlalchemy import JSON, Column, Integer, String, Numeric, DateTime, Enum, Index
 from sqlalchemy.orm import relationship
 from ..database import Base
 from ._time import utc_now
@@ -32,6 +34,11 @@ class Lead(Base):
     property_type = Column(String, nullable=True)
     configuration = Column(String, nullable=True)
     possession_preference = Column(String, nullable=True)
+    purchase_timeline = Column(String, nullable=True)
+    visit_readiness = Column(String, nullable=True)
+    contact_preference = Column(String, nullable=True)
+    buyer_intent = Column(String, nullable=True)
+    score_breakdown = Column(JSON, nullable=True)
     qualification_score = Column(Numeric(precision=5, scale=2), nullable=True)
     qualification_status = Column(
         Enum("Hot", "Warm", "Cold", "Unqualified", name="qualification_status"),

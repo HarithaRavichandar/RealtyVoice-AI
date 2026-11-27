@@ -8,6 +8,11 @@ from typing import List, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from ..schemas.property_search import PropertySearchItem
+from ..services.qualification_values import (
+    normalize_contact_preference,
+    normalize_purchase_timeline,
+    normalize_visit_readiness,
+)
 
 class ConversationStartRequest(BaseModel):
     channel: Literal["browser_voice", "browser_text", "telephone"] = Field(..., description="Channel through which the user is interacting.")
@@ -38,6 +43,19 @@ class CustomerRequirements(BaseModel):
     configuration: Optional[str] = None
     possession_before: Optional[date] = None
     availability: Optional[str] = None
+    purchase_timeline: Optional[str] = None
+    visit_readiness: Optional[str] = None
+    contact_preference: Optional[str] = None
+
+    _purchase_timeline_norm = field_validator("purchase_timeline", mode="before")(
+        normalize_purchase_timeline
+    )
+    _visit_readiness_norm = field_validator("visit_readiness", mode="before")(
+        normalize_visit_readiness
+    )
+    _contact_preference_norm = field_validator("contact_preference", mode="before")(
+        normalize_contact_preference
+    )
 
     @model_validator(mode="after")
     def validate_budget(self) -> CustomerRequirements:

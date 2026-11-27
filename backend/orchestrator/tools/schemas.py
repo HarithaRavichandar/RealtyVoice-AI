@@ -1,4 +1,3 @@
-
 """Pydantic request schemas for agent tools.
 
 This module defines the input models for the four backend tools required by
@@ -20,6 +19,12 @@ from pydantic import (
     Field,
     field_validator,
     model_validator,
+)
+
+from backend.services.qualification_values import (
+    normalize_contact_preference,
+    normalize_purchase_timeline,
+    normalize_visit_readiness,
 )
 
 
@@ -197,6 +202,40 @@ class UpdateCustomerRequirementsRequest(BaseModel):
     configuration: Optional[str] = Field(default=None)
     possession_before: Optional[date] = Field(default=None)
     availability: Optional[str] = Field(default=None)
+    purchase_timeline: Optional[str] = Field(
+        default=None,
+        description=(
+            "How soon the customer expects to buy: immediate, "
+            "within_3_months, within_6_months, within_12_months, later, "
+            "or exploring."
+        ),
+    )
+    visit_readiness: Optional[str] = Field(
+        default=None,
+        description=(
+            "Whether the customer is willing to visit a property: "
+            "ready_to_visit, considering, or not_ready."
+        ),
+    )
+    contact_preference: Optional[str] = Field(
+        default=None,
+        description=(
+            "How the customer prefers to be contacted: phone_call, "
+            "whatsapp, sms, or email."
+        ),
+    )
+
+    _purchase_timeline_norm = field_validator(
+        "purchase_timeline", mode="before"
+    )(normalize_purchase_timeline)
+
+    _visit_readiness_norm = field_validator(
+        "visit_readiness", mode="before"
+    )(normalize_visit_readiness)
+
+    _contact_preference_norm = field_validator(
+        "contact_preference", mode="before"
+    )(normalize_contact_preference)
 
     # Decimal conversion.
     _budget_min_decimal = field_validator(
@@ -466,3 +505,24 @@ __all__ = [
     "RecordConsentRequest",
     "NearbyAmenitiesRequest",
 ]
+
+
+# ---------------------------------------------------------------------------
+# RecommendPropertiesRequest
+# ---------------------------------------------------------------------------
+
+class RecommendPropertiesRequest(BaseModel):
+    """Input for the recommend_properties tool.
+
+    Ranks properties against *all* of the customer's saved requirements. No
+    search criteria are passed: they come from what has been saved.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    limit: int = Field(
+        default=5,
+        ge=1,
+        le=10,
+        description="How many top matches to return (1-10, default 5).",
+    )
