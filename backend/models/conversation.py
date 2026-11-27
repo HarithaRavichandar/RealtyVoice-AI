@@ -7,10 +7,10 @@ Fields:
 - external_session_id: string
 - created_at, updated_at: DateTime UTC
 """
-from datetime import datetime
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, JSON, Enum, Index
 from sqlalchemy.orm import relationship
 from ..database import Base
+from ._time import utc_now
 
 class Conversation(Base):
     __tablename__ = "conversations"
@@ -25,8 +25,8 @@ class Conversation(Base):
         nullable=False,
     )
     external_session_id = Column(String, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=utc_now, nullable=False)
+    updated_at = Column(DateTime, default=utc_now, onupdate=utc_now, nullable=False)
 
     # Relationships
     lead = relationship("Lead", back_populates="conversations")

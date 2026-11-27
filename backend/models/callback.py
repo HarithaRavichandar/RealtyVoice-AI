@@ -11,10 +11,10 @@ Fields:
 - status: Enum (Pending, Scheduled, Completed, Cancelled)
 - created_at, updated_at: DateTime UTC
 """
-from datetime import datetime
 from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Enum, Index
 from sqlalchemy.orm import relationship
 from ..database import Base
+from ._time import utc_now
 
 class CallbackRequest(Base):
     __tablename__ = "callback_requests"
@@ -35,8 +35,8 @@ class CallbackRequest(Base):
         nullable=False,
         default="Pending",
     )
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=utc_now, nullable=False)
+    updated_at = Column(DateTime, default=utc_now, onupdate=utc_now, nullable=False)
 
     # Relationships – lead required, conversation optional
     lead = relationship("Lead", back_populates="callbacks")

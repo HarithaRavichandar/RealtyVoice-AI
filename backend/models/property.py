@@ -14,7 +14,6 @@ Fields:
 Indexes on location, property_type, configuration for faster search.
 """
 
-from datetime import datetime
 from sqlalchemy import (
     Column,
     Integer,
@@ -27,6 +26,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 from ..database import Base
+from ._time import utc_now
 
 
 class Property(Base):
@@ -56,11 +56,11 @@ class Property(Base):
     source_url = Column(String, nullable=True)
     source_location = Column(String, nullable=True)
     source_update_date = Column(DateTime, nullable=True)
-    import_timestamp = Column(DateTime, default=datetime.utcnow, nullable=True)
+    import_timestamp = Column(DateTime, default=utc_now, nullable=True)
     raw_source_metadata = Column(JSON, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=utc_now, nullable=False)
     updated_at = Column(
-        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+        DateTime, default=utc_now, onupdate=utc_now, nullable=False
     )
 
     # Relationship to many‑to‑many matches

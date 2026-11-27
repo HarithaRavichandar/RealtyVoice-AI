@@ -8,10 +8,10 @@ Fields:
 - content: text
 - created_at: DateTime UTC
 """
-from datetime import datetime
 from sqlalchemy import Column, Integer, Text, DateTime, ForeignKey, Enum, Index, String, JSON
 from sqlalchemy.orm import relationship
 from ..database import Base
+from ._time import utc_now
 
 class Message(Base):
     __tablename__ = "messages"
@@ -25,7 +25,7 @@ class Message(Base):
     turn_id = Column(Integer, nullable=False)
     role = Column(Enum("customer", "assistant", "tool", name="message_role"), nullable=False)
     content = Column(Text, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=utc_now, nullable=False)
 
     tool_name = Column(String, nullable=True)
     tool_call_id = Column(String, nullable=True)

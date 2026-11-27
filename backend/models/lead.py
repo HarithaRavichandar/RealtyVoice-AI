@@ -10,10 +10,10 @@ Fields:
 - pipeline_status: Enum (New, Contacted, Visit Scheduled, Negotiation, Converted, Lost) not nullable
 - created_at, updated_at: DateTime UTC
 """
-from datetime import datetime
 from sqlalchemy import Column, Integer, String, Numeric, DateTime, Enum, Index
 from sqlalchemy.orm import relationship
 from ..database import Base
+from ._time import utc_now
 
 class Lead(Base):
     __tablename__ = "leads"
@@ -49,8 +49,8 @@ class Lead(Base):
         ),
         nullable=False,
     )
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=utc_now, nullable=False)
+    updated_at = Column(DateTime, default=utc_now, onupdate=utc_now, nullable=False)
 
     # Relationships
     conversations = relationship(
