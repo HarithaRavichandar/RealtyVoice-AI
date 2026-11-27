@@ -72,7 +72,7 @@ def search_properties(
         None, description="Only properties with possession_date on or before this date."
     ),
     availability: Optional[str] = Query(None, description="Exact availability_status filter."),
-    sort: str = Query("price_asc", regex="^(price_asc|price_desc)$"),
+    sort: str = Query("price_asc", pattern="^(price_asc|price_desc)$"),
     limit: int = Query(20, ge=0, le=100),
     offset: int = Query(0, ge=0),
     service: PropertySearchService = Depends(get_property_search_service),

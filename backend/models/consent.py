@@ -11,10 +11,10 @@ Fields:
 - policy_version: String
 - created_at, updated_at: DateTime UTC
 """
-from datetime import datetime
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Enum, Index
 from sqlalchemy.orm import relationship
 from ..database import Base
+from ._time import utc_now
 
 class ConsentRecord(Base):
     __tablename__ = "consent_records"
@@ -35,12 +35,12 @@ class ConsentRecord(Base):
         nullable=False,
     )
     granted = Column(Boolean, nullable=False)
-    recorded_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    recorded_at = Column(DateTime, default=utc_now, nullable=False)
     source = Column(String, nullable=False)
     conversation_id = Column(Integer, ForeignKey("conversations.conversation_id", ondelete="SET NULL"), nullable=True)
     policy_version = Column(String, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=utc_now, nullable=False)
+    updated_at = Column(DateTime, default=utc_now, onupdate=utc_now, nullable=False)
 
     # Relationships – preserve history even if lead or conversation is deleted
     lead = relationship("Lead", back_populates="consents", passive_deletes=True)

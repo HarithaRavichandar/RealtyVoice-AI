@@ -9,10 +9,10 @@ Fields:
 
 Unique constraint on (lead_id, property_id) prevents duplicate matches.
 """
-from datetime import datetime
 from sqlalchemy import Column, Integer, Float, DateTime, ForeignKey, UniqueConstraint, Index
 from sqlalchemy.orm import relationship
 from ..database import Base
+from ._time import utc_now
 
 class LeadPropertyMatch(Base):
     __tablename__ = "lead_property_matches"
@@ -26,7 +26,7 @@ class LeadPropertyMatch(Base):
     lead_id = Column(Integer, ForeignKey("leads.lead_id", ondelete="CASCADE"), nullable=False)
     property_id = Column(Integer, ForeignKey("properties.property_id", ondelete="CASCADE"), nullable=False)
     match_score = Column(Float, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=utc_now, nullable=False)
 
     # Relationships back to parent objects
     lead = relationship("Lead", back_populates="property_matches")
