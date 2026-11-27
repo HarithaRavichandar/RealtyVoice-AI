@@ -1,3 +1,4 @@
+
 """Core LLM agent orchestration service.
 
 Coordinates provider calls, registered tool execution, and conversation
@@ -182,17 +183,49 @@ AVAILABILITY VALUES:
 LOCATION MATCHING:
 
 30. Most records are labelled at city level (for example "bangalore" or
-    "new-delhi"); only a few carry neighbourhood names. Spelling
-    differences and alternate names (Bengaluru/Bangalore,
-    Gurugram/Gurgaon, "New Delhi", "White Field") are matched
-    automatically.
+    "new-delhi"); only a few carry locality names. Spelling differences,
+    spacing and alternate city names (Bengaluru/Bangalore,
+    Gurugram/Gurgaon, Bombay/Mumbai, "New Delhi", "White Field") are
+    matched automatically across all cities in the data.
 
 31. If a search returns no results and includes location_suggestions,
-    do not tell the customer there is nothing available. A suggestion
-    that is the broader city containing the area they named may be
-    searched right away, but say clearly that you widened the search.
-    For a similarly spelt name, confirm with the customer before
-    searching with it.
+    never say there is nothing available anywhere, and never imply
+    inventory exists in an area that returned nothing. Each suggestion
+    has a type:
+    - parent_city: the data has only city-level records for that city.
+      Say clearly that you have no records for the specific area they
+      named and that the city-level results do not confirm anything in
+      that area. You may search the city right away if you say that you
+      widened the search.
+    - similar_name: a similarly spelt location exists. Confirm with the
+      customer before searching with it.
+
+32. If no suggestions are returned, tell the customer that the data has
+    no records for that place. Do not guess or invent locations.
+
+NEARBY AMENITIES:
+
+33. Amenity information (hospitals, schools, metro, parks and so on)
+    comes only from nearby_amenities results. Never state amenities,
+    distances or travel times from memory or invent them. Report
+    distances as returned (distance_m, in metres).
+
+34. Results describe the area around the place that was searched, not
+    the exact address of a particular property. Say so when you link
+    amenities to a specific property.
+
+35. A category with an empty list means none were found within
+    radius_m. A category listed in failed_categories means that lookup
+    failed: say you could not check it. Never say there are none
+    nearby for a failed category.
+
+36. If radius_note is present, tell the customer the radius that was
+    actually used (radius_m), not the one they asked for.
+
+37. If nearby_amenities returns an error such as coordinates_unavailable
+    or geocode_failed, explain plainly that you cannot look up
+    amenities for that place and follow the tool error guidance. Do not
+    guess.
 """
 
 
@@ -303,6 +336,28 @@ _TOOL_ERROR_HINTS: dict[str, str] = {
     "validation": (
         "The tool arguments were invalid. Check the required fields "
         "and correct the values before retrying."
+    ),
+    "mappls_not_configured": (
+        "The map service is not available. Tell the customer that "
+        "nearby-amenity information cannot be looked up right now. Do not "
+        "retry, and do not describe amenities from memory."
+    ),
+    "geocode_failed": (
+        "The place could not be found on the map. Ask the customer for a "
+        "more specific name (area and city) or a nearby landmark. Do not "
+        "guess amenities for a place that was not found."
+    ),
+    "coordinates_unavailable": (
+        "The place was recognised but the map service returned no "
+        "coordinates, so nearby amenities cannot be searched for it. Tell "
+        "the customer plainly that you cannot look up amenities for that "
+        "exact place, and offer to try the wider area or city name instead. "
+        "Do not estimate or invent amenities, distances or travel times."
+    ),
+    "mappls_api_error": (
+        "The map service failed. You may retry once; if it fails again, "
+        "tell the customer amenity information is unavailable right now. "
+        "Do not invent amenities."
     ),
 }
 

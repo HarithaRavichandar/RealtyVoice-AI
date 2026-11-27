@@ -1,3 +1,4 @@
+
 """Pydantic request schemas for agent tools.
 
 This module defines the input models for the four backend tools required by
@@ -442,7 +443,11 @@ class NearbyAmenitiesRequest(BaseModel):
         default=3000,
         ge=100,
         le=50000,
-        description="Search radius in metres (100–50000, default 3000)",
+        description=(
+            "Search radius in metres (default 3000). The map service "
+            "supports 500-10000 m; other values are adjusted and the "
+            "result reports the radius actually used."
+        ),
     )
 
     # Reject whitespace-only location.

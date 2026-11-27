@@ -117,28 +117,14 @@ def _apply_saved_requirements(
 
 def _location_suggestions(
     service: PropertySearchService, location: str
-) -> list[str]:
+) -> list[dict[str, str]]:
     """Suggest alternatives when a location search found nothing.
 
-    Combines broader areas from a comma-separated location (for example the
-    city in "Indiranagar, Bengaluru") that do have records, and similarly
-    spelt locations that exist in the dataset. Only locations that really
-    exist in the data are suggested.
+    Built only from locations that exist in the database: similarly spelt
+    names (confirm with the customer) and city-level labels that contain the
+    area named (a parent city, which does not prove locality-level inventory).
     """
-    suggestions: list[str] = []
-
-    parts = [p.strip() for p in location.split(",") if p.strip()]
-    if len(parts) > 1:
-        for part in reversed(parts):
-            total, _ = service.search(location=part, limit=1)
-            if total > 0 and part not in suggestions:
-                suggestions.append(part)
-
-    for match in suggest_locations(location, service.distinct_locations()):
-        if match not in suggestions:
-            suggestions.append(match)
-
-    return suggestions[:5]
+    return suggest_locations(location, service.distinct_locations())
 
 
 def execute_tool(
@@ -470,6 +456,7 @@ async def execute_nearby_amenities(
     from ..providers.mappls_provider import (
         MappslsProvider,
         MappslsError,
+        clamp_radius,
     )
 
     if not MAPPLS_API_KEY:
@@ -516,9 +503,20 @@ async def execute_nearby_amenities(
                 radius=radius,
             )
 
-            # Step 3: Format for the LLM.
+            # Step 3: Format for the LLM. A category whose lookup failed is
+            # reported as failed, never as an empty list, so "lookup failed"
+            # cannot be mistaken for "none found nearby".
             amenities: Dict[str, Any] = {}
+            failed_categories: list[str] = []
             for cat_name, nearby_result in results.items():
+                if nearby_result.error:
+                    logger.warning(
+                        "Nearby lookup for '%s' failed: %s",
+                        cat_name,
+                        nearby_result.error,
+                    )
+                    failed_categories.append(cat_name)
+                    continue
                 amenities[cat_name] = [
                     {
                         "name": place.name,
@@ -533,7 +531,19 @@ async def execute_nearby_amenities(
                     for place in nearby_result.places
                 ]
 
-            return {
+            if failed_categories and not amenities:
+                return {
+                    "tool": "nearby_amenities",
+                    "error": "mappls_api_error",
+                    "message": (
+                        "The amenity lookup failed for every requested "
+                        "category."
+                    ),
+                    "failed_categories": failed_categories,
+                }
+
+            effective_radius = clamp_radius(radius)
+            response: Dict[str, Any] = {
                 "tool": "nearby_amenities",
                 "location": location,
                 "coordinates": {
@@ -541,8 +551,17 @@ async def execute_nearby_amenities(
                     "longitude": geo.longitude,
                 },
                 "address": geo.formatted_address,
+                "radius_m": effective_radius,
                 "amenities": amenities,
             }
+            if failed_categories:
+                response["failed_categories"] = failed_categories
+            if effective_radius != radius:
+                response["radius_note"] = (
+                    f"Requested radius {radius} m was adjusted to "
+                    f"{effective_radius} m (supported range is 500-10000 m)."
+                )
+            return response
 
     except MappslsError as exc:
         logger.warning("Mappls API error for '%s': %s", location, exc)

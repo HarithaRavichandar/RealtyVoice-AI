@@ -23,6 +23,13 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_BASE_URL = "https://search.mappls.com/search"
 DEFAULT_RADIUS = 3000  # metres
+MIN_RADIUS = 500  # metres - smallest radius the nearby search accepts
+MAX_RADIUS = 10_000  # metres - largest radius the nearby search accepts
+
+
+def clamp_radius(radius: int) -> int:
+    """Return the radius (metres) the nearby search will actually use."""
+    return max(MIN_RADIUS, min(radius, MAX_RADIUS))
 DEFAULT_RESULT_LIMIT = 10
 
 # ---------------------------------------------------------------------------
@@ -246,7 +253,7 @@ class MappslsProvider:
     ) -> NearbyResult:
         if not keywords or not keywords.strip():
             raise ValueError("keywords cannot be empty")
-        radius = max(500, min(radius, 10_000))
+        radius = clamp_radius(radius)
         url = f"{self._base_url}/places/nearby/json"
         params: dict[str, Any] = {
             "keywords": keywords.strip(),
@@ -343,6 +350,7 @@ __all__ = [
     "NearbyPlace",
     "NearbyResult",
     "AMENITY_CATEGORIES",
+    "clamp_radius",
     "MappslsError",
     "MappslsAuthenticationError",
     "MappslsRateLimitError",
