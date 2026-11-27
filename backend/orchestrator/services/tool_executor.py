@@ -43,6 +43,7 @@ from ...models import (
 
 from backend.services.property_search import PropertySearchService
 from backend.services.location_normalizer import suggest_locations
+from backend.services.match_summary import build_match_summary
 from backend.schemas.property_search import (
     PropertySearchItem,
     PropertyDetailResponse,
@@ -438,7 +439,22 @@ def execute_tool(
         response: Dict[str, Any] = {
             "tool": tool_name,
             "total": total,
-            "items": [item.model_dump(mode="json") for item in items],
+            "items": [
+                {
+                    **item.model_dump(mode="json"),
+                    "match": build_match_summary(
+                        item,
+                        location=request.location,
+                        property_type=request.property_type,
+                        configuration=request.configuration,
+                        min_budget=request.min_budget,
+                        max_budget=request.max_budget,
+                        possession_before=request.possession_before,
+                        availability=request.availability,
+                    ),
+                }
+                for item in items
+            ],
             "applied_defaults": applied_defaults,
         }
         if request.availability:
