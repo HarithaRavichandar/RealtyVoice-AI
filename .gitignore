@@ -37,3 +37,5 @@ data/*.db*
 .DS_Store
 Thumbs.db
 mappls_live_test.py
+
+full_diff.txt
