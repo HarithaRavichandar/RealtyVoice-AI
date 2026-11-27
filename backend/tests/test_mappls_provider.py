@@ -308,12 +308,18 @@ class TestGeocode:
 
     @pytest.mark.asyncio
     async def test_geocode_missing_coordinates(self):
+        """Valid address response without coordinates returns GeocodedLocation with None coords."""
         body = {"copResults": {"formatted_address": "Some place"}}
         transport = make_transport(body=body)
         provider = make_provider(transport)
 
         result = await provider.geocode("test")
-        assert result is None
+        assert result is not None
+        assert isinstance(result, GeocodedLocation)
+        assert result.latitude is None
+        assert result.longitude is None
+        assert result.formatted_address == "Some place"
+        assert not result.has_coordinates
 
     @pytest.mark.asyncio
     async def test_geocode_alt_field_names(self):
@@ -509,7 +515,7 @@ class TestNearby:
 
     @pytest.mark.asyncio
     async def test_nearby_caps_radius(self):
-        """Radius is capped at 50km."""
+        """Radius is capped at 10km per Mappls API documentation."""
         requests_seen = []
 
         async def handler(request: httpx.Request) -> httpx.Response:
@@ -523,7 +529,7 @@ class TestNearby:
         provider = make_provider(transport)
 
         await provider.nearby(12.97, 77.59, "test", radius=100000)
-        assert "radius=50000" in str(requests_seen[0].url)
+        assert "radius=10000" in str(requests_seen[0].url)
 
 
 # ===================================================================
@@ -652,4 +658,4 @@ class TestConstants:
         assert DEFAULT_RESULT_LIMIT == 10
 
     def test_default_base_url(self):
-        assert "atlas.mappls.com" in DEFAULT_BASE_URL
+        assert DEFAULT_BASE_URL == "https://search.mappls.com/search"

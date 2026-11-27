@@ -98,7 +98,7 @@ SARVAM_BASE_URL = os.getenv(
 MAPPLS_API_KEY = os.getenv("MAPPLS_API_KEY", "").strip()
 MAPPLS_BASE_URL = os.getenv(
     "MAPPLS_BASE_URL",
-    "https://atlas.mappls.com/api",
+    "https://search.mappls.com/search",
 ).rstrip("/")
 
 __all__ = [

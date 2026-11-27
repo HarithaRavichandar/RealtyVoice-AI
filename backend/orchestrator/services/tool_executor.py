@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 """
 Tool Executor – Phase 5C Increment 3D + Phase 2 (Lead & Consent)
@@ -10,12 +9,6 @@ Implements execution for:
 * create_callback_request
 * register_lead
 * record_consent
-
-The executor validates incoming payloads against request schemas and uses
-the caller-supplied SQLAlchemy session.
-
-It does not commit, rollback, or close the session.
-The caller remains responsible for transaction management.
 """
 
 from __future__ import annotations
@@ -67,37 +60,26 @@ def execute_tool(
     # ---------------------------------------------------------------
     if tool_name == "search_properties":
         Schema = SearchPropertiesRequest
-
     elif tool_name == "get_property_details":
         Schema = GetPropertyDetailsRequest
-
     elif tool_name == "update_customer_requirements":
         Schema = UpdateCustomerRequirementsRequest
-
     elif tool_name == "create_callback_request":
         Schema = CreateCallbackRequest
-
     elif tool_name == "register_lead":
         Schema = RegisterLeadRequest
-
     elif tool_name == "record_consent":
         Schema = RecordConsentRequest
-
     elif tool_name == "nearby_amenities":
         Schema = NearbyAmenitiesRequest
-
     else:
-        return {
-            "error": "unknown_tool",
-            "tool": tool_name,
-        }
+        return {"error": "unknown_tool", "tool": tool_name}
 
     # ---------------------------------------------------------------
     # Validate the payload
     # ---------------------------------------------------------------
     try:
         request = Schema.model_validate(payload)
-
     except ValidationError as exc:
         return {
             "error": "validation",
@@ -109,93 +91,58 @@ def execute_tool(
     # Update customer requirements
     # ---------------------------------------------------------------
     if tool_name == "update_customer_requirements":
-
         if conversation_id is None:
-            return {
-                "error": "missing_conversation_id",
-                "tool": tool_name,
-            }
-
+            return {"error": "missing_conversation_id", "tool": tool_name}
         conversation = session.get(Conversation, conversation_id)
-
         if conversation is None:
             return {
                 "error": "conversation_not_found",
                 "tool": tool_name,
                 "conversation_id": conversation_id,
             }
-
-        # Preserve existing requirements.
-        updated_requirements = dict(
-            conversation.temp_requirements or {}
-        )
-
-        # Update only explicitly supplied fields.
-        # Explicitly supplied None values are also retained.
+        updated_requirements = dict(conversation.temp_requirements or {})
         supplied_fields = request.model_dump(exclude_unset=True)
-
         updated_requirements.update(supplied_fields)
-
         try:
             update_temp_requirements(
                 session=session,
                 conversation_id=conversation_id,
                 requirements=updated_requirements,
             )
-
         except ValueError:
             return {
                 "error": "conversation_not_found",
                 "tool": tool_name,
                 "conversation_id": conversation_id,
             }
-
-        return {
-            "tool": tool_name,
-            "requirements": conversation.temp_requirements,
-        }
+        return {"tool": tool_name, "requirements": conversation.temp_requirements}
 
     # ---------------------------------------------------------------
     # Create callback request
     # ---------------------------------------------------------------
     if tool_name == "create_callback_request":
-
-        # Require a conversation ID.
         if conversation_id is None:
-            return {
-                "error": "missing_conversation_id",
-                "tool": tool_name,
-            }
-
-        # Retrieve conversation.
+            return {"error": "missing_conversation_id", "tool": tool_name}
         conversation = session.get(Conversation, conversation_id)
-
         if conversation is None:
             return {
                 "error": "conversation_not_found",
                 "tool": tool_name,
                 "conversation_id": conversation_id,
             }
-
-        # A callback requires an associated lead.
         if conversation.lead_id is None:
             return {
                 "error": "lead_required",
                 "tool": tool_name,
                 "conversation_id": conversation_id,
             }
-
         lead = session.get(Lead, conversation.lead_id)
-
         if lead is None:
             return {
                 "error": "lead_not_found",
                 "tool": tool_name,
                 "lead_id": conversation.lead_id,
             }
-
-        # Retrieve the latest callback consent.
-        # Do not filter by granted=True before selecting the latest record.
         latest_consent = (
             session.query(ConsentRecord)
             .filter(
@@ -209,16 +156,12 @@ def execute_tool(
             )
             .first()
         )
-
-        # Reject if consent is missing or the latest consent was revoked.
         if latest_consent is None or not latest_consent.granted:
             return {
                 "error": "callback_consent_required",
                 "tool": tool_name,
                 "conversation_id": conversation_id,
             }
-
-        # Create callback record.
         callback = CallbackRequest(
             lead_id=lead.lead_id,
             conversation_id=conversation_id,
@@ -227,12 +170,8 @@ def execute_tool(
             preferred_time=request.preferred_time,
             reason=request.reason,
         )
-
         session.add(callback)
-
-        # Flush to obtain callback_id without committing.
         session.flush()
-
         return {
             "tool": tool_name,
             "callback": {
@@ -251,27 +190,17 @@ def execute_tool(
     # Register lead
     # ---------------------------------------------------------------
     if tool_name == "register_lead":
-
         if conversation_id is None:
-            return {
-                "error": "missing_conversation_id",
-                "tool": tool_name,
-            }
-
+            return {"error": "missing_conversation_id", "tool": tool_name}
         conversation = session.get(Conversation, conversation_id)
-
         if conversation is None:
             return {
                 "error": "conversation_not_found",
                 "tool": tool_name,
                 "conversation_id": conversation_id,
             }
-
-        # If the conversation already has a lead, update it rather
-        # than creating a duplicate.
         if conversation.lead_id is not None:
             lead = session.get(Lead, conversation.lead_id)
-
             if lead is not None:
                 if request.customer_name is not None:
                     lead.customer_name = request.customer_name
@@ -279,9 +208,7 @@ def execute_tool(
                     lead.phone = request.phone
                 if request.email is not None:
                     lead.email = request.email
-
                 session.flush()
-
                 return {
                     "tool": tool_name,
                     "lead": {
@@ -293,11 +220,7 @@ def execute_tool(
                     },
                     "updated": True,
                 }
-
-        # Create a new lead and link it to the conversation.
-        # Copy any requirements already collected during the conversation.
         temp_req = conversation.temp_requirements or {}
-
         lead = Lead(
             customer_name=request.customer_name,
             phone=request.phone,
@@ -311,14 +234,10 @@ def execute_tool(
             qualification_status="Unqualified",
             pipeline_status="New",
         )
-
         session.add(lead)
         session.flush()
-
-        # Link the conversation to the new lead.
         conversation.lead_id = lead.lead_id
         session.flush()
-
         return {
             "tool": tool_name,
             "lead": {
@@ -335,23 +254,15 @@ def execute_tool(
     # Record consent
     # ---------------------------------------------------------------
     if tool_name == "record_consent":
-
         if conversation_id is None:
-            return {
-                "error": "missing_conversation_id",
-                "tool": tool_name,
-            }
-
+            return {"error": "missing_conversation_id", "tool": tool_name}
         conversation = session.get(Conversation, conversation_id)
-
         if conversation is None:
             return {
                 "error": "conversation_not_found",
                 "tool": tool_name,
                 "conversation_id": conversation_id,
             }
-
-        # A consent record requires an associated lead.
         if conversation.lead_id is None:
             return {
                 "error": "lead_required",
@@ -359,16 +270,9 @@ def execute_tool(
                 "message": "Register the customer as a lead before recording consent.",
                 "conversation_id": conversation_id,
             }
-
         lead = session.get(Lead, conversation.lead_id)
-
         if lead is None:
-            return {
-                "error": "lead_not_found",
-                "tool": tool_name,
-                "lead_id": conversation.lead_id,
-            }
-
+            return {"error": "lead_not_found", "tool": tool_name, "lead_id": conversation.lead_id}
         consent = ConsentRecord(
             lead_id=lead.lead_id,
             conversation_id=conversation_id,
@@ -377,10 +281,8 @@ def execute_tool(
             source="web",
             policy_version="1.0",
         )
-
         session.add(consent)
         session.flush()
-
         return {
             "tool": tool_name,
             "consent": {
@@ -392,11 +294,9 @@ def execute_tool(
         }
 
     # ---------------------------------------------------------------
-    # Nearby amenities (async — returns a deferred marker)
+    # Nearby amenities (async – returns a deferred marker)
     # ---------------------------------------------------------------
     if tool_name == "nearby_amenities":
-        # This tool requires async execution via the Mappls API.
-        # Return a marker so the caller can run it asynchronously.
         return {
             "tool": tool_name,
             "_async_pending": True,
@@ -407,7 +307,6 @@ def execute_tool(
 
     # ---------------------------------------------------------------
     # Initialize property search service
-    # Keep the caller's session alive.
     # ---------------------------------------------------------------
     service = PropertySearchService(
         session_factory=lambda: session,
@@ -418,7 +317,6 @@ def execute_tool(
     # Search properties
     # ---------------------------------------------------------------
     if tool_name == "search_properties":
-
         total, results = service.search(
             location=request.location,
             property_type=request.property_type,
@@ -428,44 +326,26 @@ def execute_tool(
             possession_before=request.possession_before,
             availability=None,
         )
-
-        items = [
-            PropertySearchItem.model_validate(prop)
-            for prop in results
-        ]
-
+        items = [PropertySearchItem.model_validate(prop) for prop in results]
         return {
             "tool": tool_name,
             "total": total,
-            "items": [
-                item.model_dump(mode="json")
-                for item in items
-            ],
+            "items": [item.model_dump(mode="json") for item in items],
         }
 
     # ---------------------------------------------------------------
     # Get property details
     # ---------------------------------------------------------------
     prop = service.get_by_id(request.property_id)
-
     if prop is None:
-        return {
-            "error": "not_found",
-            "tool": tool_name,
-            "property_id": request.property_id,
-        }
-
+        return {"error": "not_found", "tool": tool_name, "property_id": request.property_id}
     detail = PropertyDetailResponse.model_validate(prop)
-
-    return {
-        "tool": tool_name,
-        "property": detail.model_dump(mode="json"),
-    }
+    return {"tool": tool_name, "property": detail.model_dump(mode="json")}
 
 
-# -------------------------------------------------------------------
+# ---------------------------------------------------------------
 # Async executor for tools that need async I/O (Mappls nearby)
-# -------------------------------------------------------------------
+# ---------------------------------------------------------------
 
 async def execute_nearby_amenities(
     location: str,
@@ -504,7 +384,21 @@ async def execute_nearby_amenities(
                     "message": f"Could not find coordinates for '{location}'.",
                 }
 
-            # Step 2: Search nearby amenities.
+            # If geocode succeeded but no coordinates are present, report
+            # a structured error so the LLM can inform the caller.
+            if not geo.has_coordinates:
+                return {
+                    "tool": "nearby_amenities",
+                    "error": "coordinates_unavailable",
+                    "message": (
+                        f"Geocode succeeded but no coordinates were "
+                        f"returned for '{location}'."
+                    ),
+                    "formatted_address": geo.formatted_address,
+                    "eloc": geo.eloc,
+                }
+
+            # Step 2: Search nearby amenities (only when we have valid coordinates).
             results = await provider.nearby_amenities(
                 latitude=geo.latitude,
                 longitude=geo.longitude,
@@ -514,15 +408,19 @@ async def execute_nearby_amenities(
 
             # Step 3: Format for the LLM.
             amenities: Dict[str, Any] = {}
-
             for cat_name, nearby_result in results.items():
                 amenities[cat_name] = [
                     {
-                        "name": p.name,
-                        "distance_m": p.distance,
-                        "address": p.address,
+                        "name": place.name,
+                        "category": place.category,
+                        "distance_m": place.distance,
+                        "latitude": place.latitude,
+                        "longitude": place.longitude,
+                        "address": place.address,
+                        "eloc": place.eloc,
+                        "phone": place.phone,
                     }
-                    for p in nearby_result.places
+                    for place in nearby_result.places
                 ]
 
             return {
