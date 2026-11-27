@@ -41,6 +41,7 @@ from ...models import (
 )
 
 from backend.services.property_search import PropertySearchService
+from backend.services.location_normalizer import suggest_locations
 from backend.schemas.property_search import (
     PropertySearchItem,
     PropertyDetailResponse,
@@ -112,6 +113,32 @@ def _apply_saved_requirements(
 
     final = SearchPropertiesRequest.model_validate(merged)
     return final, final.model_dump(mode="json", include=set(applied))
+
+
+def _location_suggestions(
+    service: PropertySearchService, location: str
+) -> list[str]:
+    """Suggest alternatives when a location search found nothing.
+
+    Combines broader areas from a comma-separated location (for example the
+    city in "Indiranagar, Bengaluru") that do have records, and similarly
+    spelt locations that exist in the dataset. Only locations that really
+    exist in the data are suggested.
+    """
+    suggestions: list[str] = []
+
+    parts = [p.strip() for p in location.split(",") if p.strip()]
+    if len(parts) > 1:
+        for part in reversed(parts):
+            total, _ = service.search(location=part, limit=1)
+            if total > 0 and part not in suggestions:
+                suggestions.append(part)
+
+    for match in suggest_locations(location, service.distinct_locations()):
+        if match not in suggestions:
+            suggestions.append(match)
+
+    return suggestions[:5]
 
 
 def execute_tool(
@@ -397,12 +424,24 @@ def execute_tool(
             availability=request.availability,
         )
         items = [PropertySearchItem.model_validate(prop) for prop in results]
-        return {
+        response: Dict[str, Any] = {
             "tool": tool_name,
             "total": total,
             "items": [item.model_dump(mode="json") for item in items],
             "applied_defaults": applied_defaults,
         }
+        if request.availability:
+            response["availability_note"] = (
+                "Most records in the dataset have no availability status; "
+                "properties with an unknown status are excluded when an "
+                "availability filter is used, so these results may be "
+                "only a small part of what exists."
+            )
+        if total == 0 and request.location:
+            suggestions = _location_suggestions(service, request.location)
+            if suggestions:
+                response["location_suggestions"] = suggestions
+        return response
 
     # ---------------------------------------------------------------
     # Get property details

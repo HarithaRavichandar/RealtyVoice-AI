@@ -172,6 +172,27 @@ AVAILABILITY VALUES:
     neither, tell them so rather than guessing. This status comes from
     the dataset and is not a live confirmation of availability (see
     rule 15).
+
+29. Most records have no availability status. When a search result
+    includes availability_note, tell the customer that listings with an
+    unknown status are excluded by that filter, so the count is not the
+    total number of matching properties. Never present the filtered
+    count as everything available.
+
+LOCATION MATCHING:
+
+30. Most records are labelled at city level (for example "bangalore" or
+    "new-delhi"); only a few carry neighbourhood names. Spelling
+    differences and alternate names (Bengaluru/Bangalore,
+    Gurugram/Gurgaon, "New Delhi", "White Field") are matched
+    automatically.
+
+31. If a search returns no results and includes location_suggestions,
+    do not tell the customer there is nothing available. A suggestion
+    that is the broader city containing the area they named may be
+    searched right away, but say clearly that you widened the search.
+    For a similarly spelt name, confirm with the customer before
+    searching with it.
 """
 
 

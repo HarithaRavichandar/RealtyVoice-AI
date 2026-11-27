@@ -15,6 +15,7 @@ from typing import Any, Callable, List, Optional, Tuple
 from sqlalchemy import (
     asc,
     desc,
+    false,
     func,
     and_,
     or_,
@@ -25,6 +26,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Session
 
 from ..models.property import Property
+from .location_normalizer import location_variants, squash
 from ..database import SessionLocal
 
 
@@ -117,7 +119,20 @@ class PropertySearchService:
 
             # ----- location -----
             if location:
-                stmt = stmt.where(Property.location.ilike(f"%{location}%"))
+                variants = location_variants(location)
+                if variants:
+                    # Resolve the tolerant match against the (few) distinct
+                    # stored location labels, then filter with an exact IN.
+                    # This keeps "White Field", "new delhi" or "Bengaluru"
+                    # working without rewriting every row's text in SQL.
+                    labels = self._matching_locations(session, variants)
+                    stmt = stmt.where(
+                        Property.location.in_(labels) if labels else false()
+                    )
+                else:
+                    # Nothing searchable left (e.g. only punctuation): keep
+                    # the literal substring behaviour.
+                    stmt = stmt.where(Property.location.ilike(f"%{location}%"))
 
             # ----- property_type -----
             if property_type:
@@ -199,6 +214,32 @@ class PropertySearchService:
             if self.close_session:
                 session.close()
 
+    @staticmethod
+    def _matching_locations(session: Session, variants: List[str]) -> List[str]:
+        """Stored location labels whose squashed text contains any variant."""
+        rows = session.execute(
+            select(Property.location)
+            .where(Property.location.isnot(None))
+            .distinct()
+        ).scalars().all()
+        return [
+            r for r in rows if r and any(v in squash(r) for v in variants)
+        ]
+
+    def distinct_locations(self) -> List[str]:
+        """Return every distinct, non-empty location label in the dataset."""
+        session = self.session_factory()
+        try:
+            rows = session.execute(
+                select(Property.location)
+                .where(Property.location.isnot(None))
+                .distinct()
+            ).scalars().all()
+            return [r for r in rows if r and r.strip()]
+        finally:
+            if self.close_session:
+                session.close()
+
     def get_by_id(self, property_id: int) -> Optional[Property]:
         """Return a single ``Property`` by primary key or ``None`` if missing."""
         session = self.session_factory()
@@ -207,4 +248,3 @@ class PropertySearchService:
         finally:
             if self.close_session:
                 session.close()
-
