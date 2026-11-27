@@ -19,6 +19,7 @@ from typing import Any, Dict, Optional
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
+from ..schemas import CustomerRequirements
 from ..tools.schemas import (
     SearchPropertiesRequest,
     GetPropertyDetailsRequest,
@@ -183,6 +184,30 @@ def execute_tool(
         updated_requirements = dict(conversation.temp_requirements or {})
         supplied_fields = request.model_dump(exclude_unset=True)
         updated_requirements.update(supplied_fields)
+
+        # Each update is valid on its own, but the merged result may not be
+        # (for example a new maximum below a saved minimum). Storing it would
+        # leave the conversation unreadable, so reject it and say why.
+        try:
+            CustomerRequirements.model_validate(updated_requirements)
+        except ValidationError as exc:
+            saved = conversation.temp_requirements or {}
+            return {
+                "error": "requirements_conflict",
+                "tool": tool_name,
+                "message": (
+                    "This update would leave the saved requirements "
+                    "inconsistent, so nothing was saved."
+                ),
+                # Only JSON-safe fields: the raw error input holds Decimal
+                # values that cannot be written to the audit table.
+                "details": [
+                    {"loc": list(e["loc"]), "msg": e["msg"], "type": e["type"]}
+                    for e in exc.errors()
+                ],
+                "saved_budget_min": saved.get("budget_min"),
+                "saved_budget_max": saved.get("budget_max"),
+            }
         try:
             update_temp_requirements(
                 session=session,

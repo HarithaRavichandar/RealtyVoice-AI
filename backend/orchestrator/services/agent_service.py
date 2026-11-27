@@ -155,8 +155,12 @@ SAVED REQUIREMENTS IN PROPERTY SEARCH:
     saved ones; never rely on a saved value that the customer has just
     changed.
 
-26. If the customer withdraws a preference for this search, pass that
-    criterion explicitly as null so the saved value is not applied.
+26. If the customer withdraws a preference for good (for example "no
+    budget limit" or "any location"), call update_customer_requirements
+    with that field set to null; this clears the saved value. If they
+    only want to ignore a saved criterion for a single search, pass
+    that criterion as null to search_properties instead; the saved
+    value stays for later searches.
 
 27. A search result may include applied_defaults, listing the filters
     that came from saved requirements rather than from your call.
@@ -226,6 +230,14 @@ NEARBY AMENITIES:
     or geocode_failed, explain plainly that you cannot look up
     amenities for that place and follow the tool error guidance. Do not
     guess.
+
+BUDGET CONFLICTS:
+
+38. A budget range must stay consistent: the minimum cannot exceed the
+    maximum. If update_customer_requirements reports a conflict, nothing
+    was saved. Tell the customer what conflicts, ask which value they
+    want to keep, and then update again, sending the other bound as
+    null. Never say a conflicting budget was saved.
 """
 
 
@@ -336,6 +348,15 @@ _TOOL_ERROR_HINTS: dict[str, str] = {
     "validation": (
         "The tool arguments were invalid. Check the required fields "
         "and correct the values before retrying."
+    ),
+    "requirements_conflict": (
+        "The update conflicts with the saved requirements (for example the "
+        "new maximum budget is below the saved minimum) and nothing was "
+        "saved. Tell the customer about the conflict and ask which value "
+        "they want to keep. Once they answer, call "
+        "update_customer_requirements again, sending the value they no "
+        "longer want as null in the same call. Do not claim the update "
+        "was saved."
     ),
     "mappls_not_configured": (
         "The map service is not available. Tell the customer that "

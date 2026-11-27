@@ -1,3 +1,4 @@
+
 """Convert registered backend tools into provider-independent definitions."""
 
 from backend.orchestrator.providers.base import ToolDefinition
@@ -19,7 +20,9 @@ TOOL_DESCRIPTIONS = {
     "update_customer_requirements": (
         "Save or update the customer's explicitly stated property "
         "requirements, such as budget, location, property type, "
-        "configuration, possession date, or availability."
+        "configuration, possession date, or availability. To remove a "
+        "requirement the customer has withdrawn, pass that field as null. "
+        "The budget minimum cannot exceed the maximum."
     ),
     "create_callback_request": (
         "Create a callback request using the customer's preferred "

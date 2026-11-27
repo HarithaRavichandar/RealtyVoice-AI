@@ -9,7 +9,7 @@ SQLAlchemy core expressions – the whole table is never loaded into Python.
 from __future__ import annotations
 
 from decimal import Decimal
-from datetime import datetime, date
+from datetime import datetime, date, time, timedelta
 from typing import Any, Callable, List, Optional, Tuple
 
 from sqlalchemy import (
@@ -26,7 +26,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Session
 
 from ..models.property import Property
-from .location_normalizer import location_variants, squash
+from .location_normalizer import location_variants, resolve_locations
 from ..database import SessionLocal
 
 
@@ -119,13 +119,13 @@ class PropertySearchService:
 
             # ----- location -----
             if location:
-                variants = location_variants(location)
-                if variants:
+                if location_variants(location):
                     # Resolve the tolerant match against the (few) distinct
                     # stored location labels, then filter with an exact IN.
-                    # This keeps "White Field", "new delhi" or "Bengaluru"
-                    # working without rewriting every row's text in SQL.
-                    labels = self._matching_locations(session, variants)
+                    # No per-row text rewriting happens in SQL or Python.
+                    labels = resolve_locations(
+                        location, self._distinct_locations(session)
+                    )
                     stmt = stmt.where(
                         Property.location.in_(labels) if labels else false()
                     )
@@ -159,9 +159,15 @@ class PropertySearchService:
 
             # ----- possession_before -----
             if possession_before:
+                # possession_date is a DateTime; compare with the start of the
+                # day after the cutoff so a property whose possession is on
+                # the cutoff date itself is included ("on or before").
+                cutoff = datetime.combine(
+                    possession_before, time.min
+                ) + timedelta(days=1)
                 stmt = stmt.where(
                     Property.possession_date.isnot(None),
-                    Property.possession_date <= possession_before,
+                    Property.possession_date < cutoff,
                 )
 
             # ----- availability -----
@@ -215,27 +221,20 @@ class PropertySearchService:
                 session.close()
 
     @staticmethod
-    def _matching_locations(session: Session, variants: List[str]) -> List[str]:
-        """Stored location labels whose squashed text contains any variant."""
+    def _distinct_locations(session: Session) -> List[str]:
+        """Distinct, non-empty location labels (one cheap query)."""
         rows = session.execute(
             select(Property.location)
             .where(Property.location.isnot(None))
             .distinct()
         ).scalars().all()
-        return [
-            r for r in rows if r and any(v in squash(r) for v in variants)
-        ]
+        return [r for r in rows if r and r.strip()]
 
     def distinct_locations(self) -> List[str]:
         """Return every distinct, non-empty location label in the dataset."""
         session = self.session_factory()
         try:
-            rows = session.execute(
-                select(Property.location)
-                .where(Property.location.isnot(None))
-                .distinct()
-            ).scalars().all()
-            return [r for r in rows if r and r.strip()]
+            return self._distinct_locations(session)
         finally:
             if self.close_session:
                 session.close()
@@ -248,3 +247,4 @@ class PropertySearchService:
         finally:
             if self.close_session:
                 session.close()
+

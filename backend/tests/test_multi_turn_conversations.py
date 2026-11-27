@@ -129,6 +129,7 @@ def chat(monkeypatch):
             "B": prop("bangalore", "3 BHK", 9_000_000, 11_000_000),
             "C": prop("mumbai", "2 BHK", 7_000_000, 7_500_000),
             "D": prop("bangalore", "2 BHK", 9_500_000, 10_000_000),
+            "E": prop("bangalore", "1 BHK", 2_000_000, 3_000_000),
         }
         db.add_all(rows.values())
         db.commit()
@@ -285,7 +286,7 @@ def test_explicit_null_drops_a_saved_filter_for_one_search_only(chat):
         say("Here is everything in Bengaluru."),
     )
 
-    assert _ids(r3) == {chat.ids["A"], chat.ids["B"], chat.ids["D"]}
+    assert _ids(r3) == {chat.ids[k] for k in "ABDE"}
     searched = chat.tool_payloads(key="applied_defaults")[0]
     assert searched["applied_defaults"] == {"location": "Bengaluru"}
     # The saved requirements themselves are untouched.
@@ -328,7 +329,7 @@ def test_unavailable_locality_suggests_the_city_and_the_agent_recovers(chat):
 
     # The widened search used the model's explicit location, not the saved one.
     assert "location" not in second["applied_defaults"]
-    assert _ids(r) == {chat.ids["A"], chat.ids["B"], chat.ids["D"]}
+    assert _ids(r) == {chat.ids[k] for k in "ABDE"}
     assert r["next_action"]["action"] == "show_properties"
 
 
@@ -347,6 +348,116 @@ def test_unknown_place_gets_no_invented_suggestions(chat):
     assert "location_suggestions" not in payload
     assert r["matched_properties"] == []
     assert r["next_action"]["action"] == "ask_clarification"
+
+
+# ---------------------------------------------------------------------------
+# Both budget bounds across turns, clearing, and conflicting budgets
+# ---------------------------------------------------------------------------
+
+def test_both_budget_bounds_accumulate_across_turns(chat):
+    sid = chat.new_session()
+
+    chat.turn(
+        sid,
+        "My budget starts at 60 lakh",
+        tool("update_customer_requirements", {"budget_min": "6000000"}),
+        say("Noted. And your upper limit?"),
+    )
+    r2 = chat.turn(
+        sid,
+        "Up to 80 lakh, in Bengaluru",
+        tool("update_customer_requirements", {"budget_max": "8000000", "location": "Bengaluru"}),
+        say("Shall I search?"),
+    )
+    assert Decimal(str(r2["requirements"]["budget_min"])) == 6_000_000
+    assert Decimal(str(r2["requirements"]["budget_max"])) == 8_000_000
+
+    r3 = chat.turn(sid, "Yes please", tool("search_properties", {}), say("One match."))
+
+    # The minimum removes the cheap 1 BHK; the maximum removes the dearer flats.
+    assert _ids(r3) == {chat.ids["A"]}
+    applied = chat.tool_payloads(key="applied_defaults")[0]["applied_defaults"]
+    assert set(applied) == {"min_budget", "max_budget", "location"}
+    assert Decimal(str(applied["min_budget"])) == 6_000_000
+    assert Decimal(str(applied["max_budget"])) == 8_000_000
+
+
+def test_withdrawn_requirement_is_cleared_for_good(chat):
+    sid = chat.new_session()
+
+    r1 = chat.turn(
+        sid,
+        "Bengaluru, budget up to 40 lakh",
+        tool("update_customer_requirements", {"location": "Bengaluru", "budget_max": "4000000"}),
+        tool("search_properties", {}),
+        say("One cheap option."),
+    )
+    assert _ids(r1) == {chat.ids["E"]}
+
+    r2 = chat.turn(
+        sid,
+        "Forget the budget limit",
+        tool("update_customer_requirements", {"budget_max": None}),
+        tool("search_properties", {}),
+        say("Here is everything in Bengaluru."),
+    )
+    assert r2["requirements"]["budget_max"] is None
+    assert r2["requirements"]["location"] == "Bengaluru"
+    assert _ids(r2) == {chat.ids[k] for k in "ABDE"}
+    assert set(chat.tool_payloads(key="applied_defaults")[0]["applied_defaults"]) == {"location"}
+
+    # The clearing persists: a later search does not bring the budget back.
+    r3 = chat.turn(sid, "Search again", tool("search_properties", {}), say("Same list."))
+    assert _ids(r3) == {chat.ids[k] for k in "ABDE"}
+    assert set(chat.tool_payloads(key="applied_defaults")[0]["applied_defaults"]) == {"location"}
+
+
+def test_conflicting_budget_is_rejected_and_the_conversation_stays_healthy(chat):
+    sid = chat.new_session()
+
+    chat.turn(
+        sid,
+        "My budget starts at 90 lakh",
+        tool("update_customer_requirements", {"budget_min": "9000000"}),
+        say("Noted."),
+    )
+
+    # A maximum below the saved minimum is rejected, nothing is stored.
+    r2 = chat.turn(
+        sid,
+        "Actually under 50 lakh",
+        tool("update_customer_requirements", {"budget_max": "5000000"}),
+        say("That conflicts with your 90 lakh minimum. Which should I keep?"),
+    )
+    assert Decimal(str(r2["requirements"]["budget_min"])) == 9_000_000
+    assert r2["requirements"]["budget_max"] is None
+
+    conflict = chat.tool_payloads(key="requirements_conflict")[0]
+    assert conflict["error"] == "requirements_conflict"
+    assert conflict["saved_budget_min"] == "9000000"
+    assert conflict["saved_budget_max"] is None
+
+    after_tool = chat.last_calls[1]["messages"]
+    tool_index = next(i for i, m in enumerate(after_tool) if m.role == MessageRole.TOOL)
+    hint = after_tool[tool_index + 1]
+    assert hint.role == MessageRole.SYSTEM
+    assert "Do not claim the update was saved" in hint.content
+
+    # The customer resolves it; the model clears the bound they dropped.
+    r3 = chat.turn(
+        sid,
+        "Keep the 50 lakh maximum",
+        tool("update_customer_requirements", {"budget_min": None, "budget_max": "5000000"}),
+        tool("search_properties", {"location": "Bengaluru"}),
+        say("Here is the cheap option."),
+    )
+    assert r3["requirements"]["budget_min"] is None
+    assert Decimal(str(r3["requirements"]["budget_max"])) == 5_000_000
+    assert _ids(r3) == {chat.ids["E"]}
+
+    # The model saw the saved (valid) requirements at the start of that turn,
+    # i.e. nothing was silently dropped.
+    assert '"budget_min": "9000000"' in chat.last_calls[0]["messages"][0].content
 
 
 # ---------------------------------------------------------------------------
