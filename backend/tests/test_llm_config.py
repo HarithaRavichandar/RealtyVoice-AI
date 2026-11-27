@@ -22,7 +22,7 @@ def run_config_import(extra_env=None):
         "AGENT_MAX_TOOL_ITERATIONS",
     ):
         env.pop(key, None)
-
+    env["GROQ_API_KEY"] = ""
     env["PYTHON_DOTENV_DISABLED"] = "1"
 
     if extra_env:

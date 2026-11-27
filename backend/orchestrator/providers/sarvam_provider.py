@@ -118,7 +118,7 @@ class TTSResult:
 # ---------------------------------------------------------------------------
 
 # Default voice for TTS — a clear English-Indian female voice from v4-flash.
-DEFAULT_TTS_SPEAKER = "meera"
+DEFAULT_TTS_SPEAKER = "simran_en_sales"
 DEFAULT_TTS_MODEL = "bulbul:v4-flash"
 DEFAULT_STT_MODEL = "saaras:v4"
 DEFAULT_TIMEOUT = 30.0

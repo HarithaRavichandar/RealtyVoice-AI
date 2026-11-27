@@ -6,3 +6,4 @@ python-dotenv
 httpx
 pytest
 pytest-asyncio==1.5.0
+python-multipart>=0.0.9
