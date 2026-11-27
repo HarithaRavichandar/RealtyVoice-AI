@@ -161,6 +161,17 @@ SAVED REQUIREMENTS IN PROPERTY SEARCH:
     that came from saved requirements rather than from your call.
     Describe the search to the customer accurately, including those
     filters, and never claim a filter the customer did not ask for.
+
+AVAILABILITY VALUES:
+
+28. The availability filter uses the dataset's construction status.
+    The valid values are "Ready to Move" and "Under Construction".
+    Map the customer's words to one of them (for example "ready to move
+    in" or "immediate possession" means "Ready to Move"). Only use
+    these values; if the customer asks for a status that matches
+    neither, tell them so rather than guessing. This status comes from
+    the dataset and is not a live confirmation of availability (see
+    rule 15).
 """
 
 

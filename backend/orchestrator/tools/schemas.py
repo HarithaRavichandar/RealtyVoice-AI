@@ -42,6 +42,39 @@ def _reject_whitespace(value: Optional[str]) -> Optional[str]:
     return value
 
 
+# Canonical availability_status values used by the property dataset, and the
+# customer phrasings that map onto them. Values not listed here pass through
+# unchanged (apart from trimming) so other statuses keep matching exactly.
+AVAILABILITY_READY = "Ready to Move"
+AVAILABILITY_UNDER_CONSTRUCTION = "Under Construction"
+
+_AVAILABILITY_SYNONYMS = {
+    "ready": AVAILABILITY_READY,
+    "ready to move": AVAILABILITY_READY,
+    "ready to move in": AVAILABILITY_READY,
+    "move in ready": AVAILABILITY_READY,
+    "rtm": AVAILABILITY_READY,
+    "ready possession": AVAILABILITY_READY,
+    "immediate possession": AVAILABILITY_READY,
+    "immediate": AVAILABILITY_READY,
+    "under construction": AVAILABILITY_UNDER_CONSTRUCTION,
+    "still under construction": AVAILABILITY_UNDER_CONSTRUCTION,
+    "uc": AVAILABILITY_UNDER_CONSTRUCTION,
+    "construction": AVAILABILITY_UNDER_CONSTRUCTION,
+    "being built": AVAILABILITY_UNDER_CONSTRUCTION,
+}
+
+
+def _normalize_availability(value: Optional[str]) -> Optional[str]:
+    """Reject whitespace-only input and map common phrasings to the
+    canonical availability_status values."""
+    value = _reject_whitespace(value)
+    if value is None or not isinstance(value, str):
+        return value
+    key = " ".join(value.lower().replace("-", " ").replace("_", " ").split())
+    return _AVAILABILITY_SYNONYMS.get(key, value.strip())
+
+
 # ---------------------------------------------------------------------------
 # 1. SearchPropertiesRequest
 # ---------------------------------------------------------------------------
@@ -77,8 +110,9 @@ class SearchPropertiesRequest(BaseModel):
     availability: Optional[str] = Field(
         default=None,
         description=(
-            "Availability status the customer wants (matched "
-            "case-insensitively against the property's availability_status)"
+            "Availability status the customer wants: 'Ready to Move' or "
+            "'Under Construction'. Phrases such as 'ready to move in' are "
+            "mapped automatically."
         ),
     )
 
@@ -98,7 +132,7 @@ class SearchPropertiesRequest(BaseModel):
     _no_ws_availability = field_validator(
         "availability",
         mode="before",
-    )(_reject_whitespace)
+    )(_normalize_availability)
 
     _no_ws_property_type = field_validator(
         "property_type",
@@ -193,7 +227,7 @@ class UpdateCustomerRequirementsRequest(BaseModel):
     _ws_availability = field_validator(
         "availability",
         mode="before",
-    )(_reject_whitespace)
+    )(_normalize_availability)
 
     @model_validator(mode="after")
     def _validate_budget(self) -> "UpdateCustomerRequirementsRequest":

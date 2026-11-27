@@ -8,8 +8,9 @@ TOOL_DESCRIPTIONS = {
     "search_properties": (
         "Search available property listings using the customer's "
         "location, property type, configuration, budget range "
-        "(min_budget and/or max_budget), and possession "
-        "requirements. Use this when the customer wants property options."
+        "(min_budget and/or max_budget), possession date, and "
+        "availability ('Ready to Move' or 'Under Construction'). "
+        "Use this when the customer wants property options."
     ),
     "get_property_details": (
         "Retrieve the full details of a specific property using its "
