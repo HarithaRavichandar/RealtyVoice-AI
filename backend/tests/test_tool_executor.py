@@ -103,3 +103,27 @@ def test_search_budget_mapping(dbsession, sample_properties):
     # With max_budget lower than listing_price, the property should be filtered out
     assert result["total"] == 0
     assert result["items"] == []
+
+
+def test_search_min_budget_filters_cheap(dbsession, sample_properties):
+    """min_budget=2500000 should exclude property 1 (price_max=2000000)."""
+    payload = {
+        "min_budget": "2500000",
+    }
+    result = execute_tool(dbsession, "search_properties", payload)
+    assert result["tool"] == "search_properties"
+    # Only property 2 (price_max=5000000) should match
+    assert result["total"] == 1
+    assert result["items"][0]["location"] == "Delhi"
+
+
+def test_search_min_and_max_budget(dbsession, sample_properties):
+    """Both min and max budget narrow to exactly property 1."""
+    payload = {
+        "min_budget": "1000000",
+        "max_budget": "2000000",
+    }
+    result = execute_tool(dbsession, "search_properties", payload)
+    assert result["tool"] == "search_properties"
+    assert result["total"] == 1
+    assert result["items"][0]["location"] == "Mumbai"

@@ -1,4 +1,3 @@
-
 """Pydantic request schemas for agent tools.
 
 This module defines the input models for the four backend tools required by
@@ -61,7 +60,12 @@ class SearchPropertiesRequest(BaseModel):
     property_type: Optional[str] = Field(default=None)
     configuration: Optional[str] = Field(default=None)
 
-    # max_budget mirrors the max_price argument of the service.
+    # min_budget / max_budget mirror the min_price / max_price arguments
+    # of the PropertySearchService.
+    min_budget: Optional[Decimal] = Field(
+        default=None,
+        description="Lower price bound",
+    )
     max_budget: Optional[Decimal] = Field(
         default=None,
         description="Upper price bound",
@@ -73,6 +77,7 @@ class SearchPropertiesRequest(BaseModel):
 
     # Convert strings to Decimal before validation.
     _decimal = field_validator(
+        "min_budget",
         "max_budget",
         mode="before",
     )(_ensure_decimal)
@@ -95,8 +100,16 @@ class SearchPropertiesRequest(BaseModel):
 
     @model_validator(mode="after")
     def _budget_non_negative(self) -> "SearchPropertiesRequest":
+        if self.min_budget is not None and self.min_budget < 0:
+            raise ValueError("min_budget must be non‑negative")
         if self.max_budget is not None and self.max_budget < 0:
             raise ValueError("max_budget must be non‑negative")
+        if (
+            self.min_budget is not None
+            and self.max_budget is not None
+            and self.min_budget > self.max_budget
+        ):
+            raise ValueError("min_budget must not exceed max_budget")
         return self
 
 

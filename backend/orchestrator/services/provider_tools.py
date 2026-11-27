@@ -1,4 +1,3 @@
-
 """Convert registered backend tools into provider-independent definitions."""
 
 from backend.orchestrator.providers.base import ToolDefinition
@@ -8,7 +7,8 @@ from .tool_registry import TOOL_REGISTRY
 TOOL_DESCRIPTIONS = {
     "search_properties": (
         "Search available property listings using the customer's "
-        "location, property type, configuration, budget, and possession "
+        "location, property type, configuration, budget range "
+        "(min_budget and/or max_budget), and possession "
         "requirements. Use this when the customer wants property options."
     ),
     "get_property_details": (

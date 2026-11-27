@@ -6,6 +6,7 @@ only strings, budget ordering) and the simple static lookup helper.
 
 import pytest
 from datetime import date
+from decimal import Decimal
 from backend.orchestrator.tools.schemas import (
     SearchPropertiesRequest,
     GetPropertyDetailsRequest,
@@ -48,6 +49,34 @@ def test_search_properties_unknown_field():
 def test_search_properties_whitespace_location():
     with pytest.raises(ValueError, match="value cannot be whitespace only"):
         SearchPropertiesRequest(location="   ")
+
+
+def test_search_properties_min_budget_valid():
+    req = SearchPropertiesRequest(min_budget="3000000", max_budget="8000000")
+    assert req.min_budget == 3000000
+    assert req.max_budget == 8000000
+
+
+def test_search_properties_min_budget_only():
+    req = SearchPropertiesRequest(min_budget="5000000")
+    assert req.min_budget == 5000000
+    assert req.max_budget is None
+
+
+def test_search_properties_min_budget_negative():
+    with pytest.raises(ValueError, match="min_budget must be non‑negative"):
+        SearchPropertiesRequest(min_budget="-500")
+
+
+def test_search_properties_min_exceeds_max():
+    with pytest.raises(ValueError, match="min_budget must not exceed max_budget"):
+        SearchPropertiesRequest(min_budget="9000000", max_budget="5000000")
+
+
+def test_search_properties_min_budget_decimal_conversion():
+    req = SearchPropertiesRequest(min_budget="2500000.50")
+    assert req.min_budget == Decimal("2500000.50")
+
 
 # ---------------------------------------------------------------------------
 # GetPropertyDetailsRequest tests
@@ -220,4 +249,3 @@ def test_lookup_tool_success():
 def test_lookup_tool_failure():
     with pytest.raises(KeyError, match="Tool 'nonexistent' not found in registry"):
         lookup_tool("nonexistent")
-

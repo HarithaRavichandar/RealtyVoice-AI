@@ -321,7 +321,7 @@ def execute_tool(
             location=request.location,
             property_type=request.property_type,
             configuration=request.configuration,
-            min_price=None,
+            min_price=request.min_budget,
             max_price=request.max_budget,
             possession_before=request.possession_before,
             availability=None,
