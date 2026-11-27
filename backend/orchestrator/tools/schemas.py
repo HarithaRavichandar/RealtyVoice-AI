@@ -74,6 +74,13 @@ class SearchPropertiesRequest(BaseModel):
         default=None,
         description="Desired possession date",
     )
+    availability: Optional[str] = Field(
+        default=None,
+        description=(
+            "Availability status the customer wants (matched "
+            "case-insensitively against the property's availability_status)"
+        ),
+    )
 
     # Convert strings to Decimal before validation.
     _decimal = field_validator(
@@ -85,6 +92,11 @@ class SearchPropertiesRequest(BaseModel):
     # Reject whitespace-only strings for textual criteria.
     _no_ws_location = field_validator(
         "location",
+        mode="before",
+    )(_reject_whitespace)
+
+    _no_ws_availability = field_validator(
+        "availability",
         mode="before",
     )(_reject_whitespace)
 

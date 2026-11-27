@@ -1,4 +1,3 @@
-
 """Core LLM agent orchestration service.
 
 Coordinates provider calls, registered tool execution, and conversation
@@ -139,6 +138,29 @@ VOICE RESPONSE RULES:
 23. For simple conversational replies (greetings, clarification
     questions, short answers), do NOT include a [SPOKEN] block.
     The system will use your reply directly for speech.
+
+SAVED REQUIREMENTS IN PROPERTY SEARCH:
+
+24. The saved customer requirements shown above are applied
+    automatically to search_properties for any criterion you do not
+    pass yourself (budget range, location, property type,
+    configuration, possession date, availability). You do not need to
+    repeat unchanged saved requirements in every search.
+
+25. When the customer states a new or changed preference (for example
+    switching from 2 BHK to 3 BHK, or a new budget), always save it
+    with update_customer_requirements and also pass the new value
+    explicitly to search_properties. Explicit values always override
+    saved ones; never rely on a saved value that the customer has just
+    changed.
+
+26. If the customer withdraws a preference for this search, pass that
+    criterion explicitly as null so the saved value is not applied.
+
+27. A search result may include applied_defaults, listing the filters
+    that came from saved requirements rather than from your call.
+    Describe the search to the customer accurately, including those
+    filters, and never claim a filter the customer did not ask for.
 """
 
 

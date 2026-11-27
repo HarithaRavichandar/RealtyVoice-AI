@@ -47,6 +47,73 @@ from backend.schemas.property_search import (
 )
 
 
+# Search argument -> stored CustomerRequirements field.
+_SAVED_REQUIREMENT_FIELDS = {
+    "min_budget": "budget_min",
+    "max_budget": "budget_max",
+    "location": "location",
+    "property_type": "property_type",
+    "configuration": "configuration",
+    "possession_before": "possession_before",
+    "availability": "availability",
+}
+
+
+def _apply_saved_requirements(
+    session: Session,
+    conversation_id: Optional[int],
+    request: SearchPropertiesRequest,
+) -> tuple[SearchPropertiesRequest, Dict[str, Any]]:
+    """Fill search criteria the caller left out from saved requirements.
+
+    Saved requirements are only fallbacks: any field the caller supplied
+    explicitly (even as null) is kept as-is, so a new preference such as
+    3 BHK always overrides a saved 2 BHK. Each saved value is validated
+    together with the request; a value that is unusable (invalid, or in
+    conflict with an explicit budget) is skipped instead of failing the
+    search. Returns the final request and the ``applied_defaults`` mapping
+    of search argument -> value that came from saved requirements.
+    """
+    if conversation_id is None:
+        return request, {}
+
+    conversation = session.get(Conversation, conversation_id)
+    saved = conversation.temp_requirements if conversation else None
+    if not isinstance(saved, dict) or not saved:
+        return request, {}
+
+    merged = request.model_dump(exclude_unset=True)
+    applied: Dict[str, Any] = {}
+
+    for search_field, saved_field in _SAVED_REQUIREMENT_FIELDS.items():
+        if search_field in request.model_fields_set:
+            continue
+        value = saved.get(saved_field)
+        if value is None or value == "":
+            continue
+        try:
+            SearchPropertiesRequest.model_validate(
+                {**merged, search_field: value}
+            )
+        except (ValidationError, ArithmeticError):
+            # ArithmeticError covers decimal.InvalidOperation raised by the
+            # budget converter for non-numeric saved values.
+            logger.warning(
+                "Ignoring unusable saved requirement %s for conversation %s",
+                saved_field,
+                conversation_id,
+            )
+            continue
+        merged[search_field] = value
+        applied[search_field] = value
+
+    if not applied:
+        return request, {}
+
+    final = SearchPropertiesRequest.model_validate(merged)
+    return final, final.model_dump(mode="json", include=set(applied))
+
+
 def execute_tool(
     session: Session,
     tool_name: str,
@@ -317,6 +384,9 @@ def execute_tool(
     # Search properties
     # ---------------------------------------------------------------
     if tool_name == "search_properties":
+        request, applied_defaults = _apply_saved_requirements(
+            session, conversation_id, request
+        )
         total, results = service.search(
             location=request.location,
             property_type=request.property_type,
@@ -324,13 +394,14 @@ def execute_tool(
             min_price=request.min_budget,
             max_price=request.max_budget,
             possession_before=request.possession_before,
-            availability=None,
+            availability=request.availability,
         )
         items = [PropertySearchItem.model_validate(prop) for prop in results]
         return {
             "tool": tool_name,
             "total": total,
             "items": [item.model_dump(mode="json") for item in items],
+            "applied_defaults": applied_defaults,
         }
 
     # ---------------------------------------------------------------
