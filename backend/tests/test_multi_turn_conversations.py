@@ -515,14 +515,6 @@ def test_amenity_error_guidance_reaches_the_model(chat, monkeypatch):
     assert "Do not estimate or invent" in hint.content
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "Known issue in router._build_agent_response: a successful "
-        "nearby_amenities turn is classified intent='unknown' / "
-        "next_action='error' because the tool is not in its allow-list."
-    ),
-)
 def test_successful_amenity_answer_is_not_reported_as_an_error(chat, monkeypatch):
     monkeypatch.setattr(
         "backend.orchestrator.services.agent_service.execute_nearby_amenities",
@@ -545,7 +537,29 @@ def test_successful_amenity_answer_is_not_reported_as_an_error(chat, monkeypatch
     )
 
     assert r["next_action"]["action"] != "error"
-    assert r["intent"] != "unknown"
+    assert r["intent"] == "general_question"
+
+
+def test_a_failed_amenity_lookup_is_explained_not_reported_as_an_error(chat, monkeypatch):
+    monkeypatch.setattr(
+        "backend.orchestrator.services.agent_service.execute_nearby_amenities",
+        AsyncMock(return_value={"tool": "nearby_amenities", "error": "mappls_api_error",
+                                "failure_kind": "timeout", "message": "The service took too long."}),
+    )
+    sid = chat.new_session()
+    r = chat.turn(
+        sid, "What is near Whitefield?",
+        tool("nearby_amenities", {"location": "Whitefield"}),
+        say("I can't check nearby places right now. Would you like to see properties instead?"),
+    )
+    assert r["next_action"]["action"] != "error"
+    assert "can't check nearby places" in r["reply"]
+
+
+def test_an_unrecognised_tool_result_is_still_reported_as_an_error(chat):
+    sid = chat.new_session()
+    r = chat.turn(sid, "Do something odd", tool("not_a_real_tool", {}), say("Sorry, that failed."))
+    assert r["next_action"]["action"] == "error"
 
 
 # ---------------------------------------------------------------------------

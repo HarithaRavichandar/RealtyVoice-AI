@@ -178,6 +178,9 @@ def _build_agent_response(
             "update_customer_requirements",
             "register_lead",
             "record_consent",
+            # Amenity answers are ordinary replies to the customer, not an
+            # error state (a lookup failure is explained by the agent).
+            "nearby_amenities",
             None,
         }
         for entry in tool_results

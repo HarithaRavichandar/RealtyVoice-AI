@@ -1,3 +1,4 @@
+
 """Pydantic request schemas for agent tools.
 
 This module defines the input models for the four backend tools required by
@@ -33,10 +34,23 @@ from backend.services.qualification_values import (
 # ---------------------------------------------------------------------------
 
 def _ensure_decimal(value: Optional[object]) -> Optional[Decimal]:
-    """Convert None or a numeric/string value to Decimal."""
+    """Convert None or a numeric/string value to a finite Decimal.
+
+    Anything that is not a plain finite number (text such as "abc", an empty
+    string, NaN, Infinity) raises ``ValueError`` so the caller gets a normal
+    validation error instead of a raw ``decimal.InvalidOperation``.
+    """
     if value is None:
         return None
-    return Decimal(str(value))
+    if isinstance(value, bool):
+        raise ValueError("value must be a number")
+    try:
+        number = Decimal(str(value).strip())
+    except ArithmeticError:  # decimal.InvalidOperation
+        raise ValueError("value must be a valid number") from None
+    if not number.is_finite():
+        raise ValueError("value must be a finite number")
+    return number
 
 
 def _reject_whitespace(value: Optional[str]) -> Optional[str]:
@@ -526,3 +540,4 @@ class RecommendPropertiesRequest(BaseModel):
         le=10,
         description="How many top matches to return (1-10, default 5).",
     )
+
