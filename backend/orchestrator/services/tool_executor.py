@@ -45,6 +45,7 @@ from ...models import (
 from backend.services.property_search import PropertySearchService
 from backend.services.location_normalizer import suggest_locations
 from backend.services.match_summary import build_match_summary
+from ..providers.failures import CUSTOMER_MESSAGES, FailureKind, classify
 from backend.services.callbacks import cancel_open_callbacks, create_or_reschedule
 from backend.services.lead_matching import match_properties, save_matches
 from backend.services.lead_qualification import refresh_lead_qualification
@@ -614,6 +615,7 @@ async def execute_nearby_amenities(
                 return {
                     "tool": "nearby_amenities",
                     "error": "geocode_failed",
+                    "failure_kind": FailureKind.NO_RESULTS.value,
                     "message": f"Could not find coordinates for '{location}'.",
                 }
 
@@ -671,6 +673,7 @@ async def execute_nearby_amenities(
                 return {
                     "tool": "nearby_amenities",
                     "error": "mappls_api_error",
+                    "failure_kind": FailureKind.PROVIDER_ERROR.value,
                     "message": (
                         "The amenity lookup failed for every requested "
                         "category."
@@ -700,9 +703,12 @@ async def execute_nearby_amenities(
             return response
 
     except MappslsError as exc:
-        logger.warning("Mappls API error for '%s': %s", location, exc)
+        kind = classify(exc) or FailureKind.PROVIDER_ERROR
+        logger.warning("Mappls API error for '%s' (%s): %s", location, kind.value, exc)
         return {
             "tool": "nearby_amenities",
             "error": "mappls_api_error",
-            "message": str(exc),
+            "failure_kind": kind.value,
+            # Customer-safe wording only: no provider text, tokens or URLs.
+            "message": CUSTOMER_MESSAGES.get(kind, "The map service failed."),
         }

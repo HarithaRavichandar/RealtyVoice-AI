@@ -12,6 +12,12 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..schemas.property_search import PropertySearchItem
 
+from .providers.failures import (
+    CUSTOMER_MESSAGES as FAILURE_CUSTOMER_MESSAGES,
+    HTTP_STATUS as FAILURE_HTTP_STATUS,
+    FailureKind,
+    classify,
+)
 from .schemas import (
     AgentRequest,
     AgentResponse,
@@ -380,6 +386,20 @@ async def agent_turn(
         logger.exception("Agent turn failed: %s", exc)
 
         db.rollback()
+
+        kind = classify(exc)
+        if kind in FAILURE_HTTP_STATUS:
+            # A known provider failure: say what kind it is, never the
+            # provider's own message.
+            headers = {"X-Failure-Kind": kind.value}
+            retry_after = getattr(exc, "retry_after", None)
+            if kind is FailureKind.RATE_LIMITED and retry_after:
+                headers["Retry-After"] = str(retry_after)
+            raise HTTPException(
+                status_code=FAILURE_HTTP_STATUS[kind],
+                detail=FAILURE_CUSTOMER_MESSAGES[kind],
+                headers=headers,
+            ) from exc
 
         raise HTTPException(
             status_code=502,

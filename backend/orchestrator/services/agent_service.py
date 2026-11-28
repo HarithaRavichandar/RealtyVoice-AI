@@ -433,9 +433,12 @@ _TOOL_ERROR_HINTS: dict[str, str] = {
         "Do not estimate or invent amenities, distances or travel times."
     ),
     "mappls_api_error": (
-        "The map service failed. You may retry once; if it fails again, "
+        "The map service failed (see failure_kind). Retry once only when "
+        "failure_kind is timeout, network_error or rate_limited; for "
+        "auth_failure, quota_exceeded or anything else do not retry. Then "
         "tell the customer amenity information is unavailable right now. "
-        "Do not invent amenities."
+        "Never say there are no amenities nearby because of this failure, "
+        "and do not invent amenities."
     ),
 }
 

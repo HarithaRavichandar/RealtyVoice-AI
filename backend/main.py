@@ -22,7 +22,28 @@ from fastapi.staticfiles import StaticFiles
 
 from sqlalchemy import text
 
-from .config import CORS_ORIGINS, DEBUG, LOG_LEVEL
+from .config import (
+    CORS_ALLOW_CREDENTIALS,
+    CORS_ORIGINS,
+    DEBUG,
+    LOG_FORMAT,
+    LOG_LEVEL,
+    MAX_AUDIO_UPLOAD_BYTES,
+    MAX_JSON_BODY_BYTES,
+    RATE_LIMIT_AGENT_PER_MINUTE,
+    RATE_LIMIT_DEFAULT_PER_MINUTE,
+    RATE_LIMIT_ENABLED,
+    RATE_LIMIT_VOICE_PER_MINUTE,
+    TRUST_PROXY_HEADERS,
+)
+from .logging_config import build_logging_config
+from .security import (
+    RateLimitConfig,
+    RateLimitMiddleware,
+    RequestContextMiddleware,
+    RequestSizeLimitMiddleware,
+    SlidingWindowLimiter,
+)
 from .database import get_db
 
 
@@ -30,31 +51,7 @@ from .database import get_db
 # LOGGING
 # --------------------------------------------------
 
-LOGGING_CONFIG = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "formatters": {
-        "standard": {
-            "format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-            "datefmt": "%Y-%m-%d %H:%M:%S",
-        },
-    },
-    "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
-            "formatter": "standard",
-            "stream": "ext://sys.stdout",
-        },
-    },
-    "root": {
-        "level": LOG_LEVEL,
-        "handlers": ["console"],
-    },
-    "loggers": {
-        "uvicorn": {"level": LOG_LEVEL, "handlers": ["console"], "propagate": False},
-        "sqlalchemy.engine": {"level": "WARNING", "handlers": ["console"], "propagate": False},
-    },
-}
+LOGGING_CONFIG = build_logging_config(LOG_LEVEL, LOG_FORMAT)
 
 logging.config.dictConfig(LOGGING_CONFIG)
 logger = logging.getLogger(__name__)
@@ -91,15 +88,39 @@ app = FastAPI(
 
 
 # --------------------------------------------------
-# CORS MIDDLEWARE
+# REQUEST PROTECTION
+# Middleware added last is outermost. CORS is added after these (below) so it
+# wraps them and rejected requests (413/429) still carry CORS headers.
+# --------------------------------------------------
+
+rate_limit_config = RateLimitConfig(
+    enabled=RATE_LIMIT_ENABLED,
+    agent_per_minute=RATE_LIMIT_AGENT_PER_MINUTE,
+    voice_per_minute=RATE_LIMIT_VOICE_PER_MINUTE,
+    default_per_minute=RATE_LIMIT_DEFAULT_PER_MINUTE,
+    trust_proxy_headers=TRUST_PROXY_HEADERS,
+)
+rate_limiter = SlidingWindowLimiter(rate_limit_config)
+app.add_middleware(RateLimitMiddleware, config=rate_limit_config, limiter=rate_limiter)
+app.add_middleware(
+    RequestSizeLimitMiddleware,
+    max_json_bytes=MAX_JSON_BODY_BYTES,
+    max_audio_bytes=MAX_AUDIO_UPLOAD_BYTES,
+)
+app.add_middleware(RequestContextMiddleware)
+
+
+# --------------------------------------------------
+# CORS MIDDLEWARE (outermost)
 # --------------------------------------------------
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,
-    allow_credentials=True,
+    allow_credentials=CORS_ALLOW_CREDENTIALS,
     allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["Content-Type", "Authorization"],
+    allow_headers=["Content-Type", "Authorization", "X-Request-ID"],
+    expose_headers=["X-Request-ID", "Retry-After", "X-Failure-Kind"],
 )
 
 

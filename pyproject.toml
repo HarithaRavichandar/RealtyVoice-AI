@@ -1,0 +1,6 @@
+[tool.pytest.ini_options]
+# Single source of pytest configuration (replaces pytest.ini).
+testpaths = ["backend/tests", "tests"]
+pythonpath = ["."]
+asyncio_default_fixture_loop_scope = "function"
+addopts = "-ra"

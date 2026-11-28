@@ -15,6 +15,8 @@ from typing import Any, Optional
 
 import httpx
 
+from .failures import FailureKind, is_quota_response
+
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
@@ -117,14 +119,27 @@ class NearbyResult:
 class MappslsError(Exception):
     """Base error for Mappls API calls."""
 
+    failure_kind = FailureKind.PROVIDER_ERROR
+
 class MappslsAuthenticationError(MappslsError):
     """Invalid or expired bearer token."""
+
+    failure_kind = FailureKind.AUTH_FAILURE
 
 class MappslsRateLimitError(MappslsError):
     """Rate limit exceeded."""
 
+    failure_kind = FailureKind.RATE_LIMITED
+
+class MappslsQuotaExceededError(MappslsRateLimitError):
+    """Plan or credit limit used up (do not retry)."""
+
+    failure_kind = FailureKind.QUOTA_EXCEEDED
+
 class MappslsTimeoutError(MappslsError):
     """Request timed out."""
+
+    failure_kind = FailureKind.TIMEOUT
 
 class MappslsAPIError(MappslsError):
     """Non‑success HTTP status."""
@@ -133,8 +148,15 @@ class MappslsAPIError(MappslsError):
         self.status_code = status_code
         super().__init__(f"HTTP {status_code}: {detail}")
 
+class MappslsNetworkError(MappslsAPIError):
+    """The Mappls API could not be reached (status_code is 0)."""
+
+    failure_kind = FailureKind.NETWORK_ERROR
+
 class MappslsResponseError(MappslsError):
     """Unexpected response body."""
+
+    failure_kind = FailureKind.INVALID_RESPONSE
 
 # ---------------------------------------------------------------------------
 # Provider
@@ -183,6 +205,8 @@ class MappslsProvider:
         status = response.status_code
         if status == 401:
             raise MappslsAuthenticationError("Invalid or expired Mappls bearer token")
+        if is_quota_response(status, response.text):
+            raise MappslsQuotaExceededError("Mappls usage quota exceeded")
         if status == 429:
             raise MappslsRateLimitError("Mappls rate limit exceeded")
         if status >= 400:
@@ -210,8 +234,8 @@ class MappslsProvider:
             )
         except httpx.TimeoutException as exc:
             raise MappslsTimeoutError(f"Geocode request timed out: {exc}") from exc
-        except httpx.ConnectError as exc:
-            raise MappslsAPIError(0, f"Connection failed: {exc}") from exc
+        except httpx.RequestError as exc:
+            raise MappslsNetworkError(0, f"Connection failed: {exc}") from exc
 
         self._handle_error(response)
         try:
@@ -268,8 +292,8 @@ class MappslsProvider:
             response = await self._client.get(url, params=params)
         except httpx.TimeoutException as exc:
             raise MappslsTimeoutError(f"Nearby request timed out: {exc}") from exc
-        except httpx.ConnectError as exc:
-            raise MappslsAPIError(0, f"Connection failed: {exc}") from exc
+        except httpx.RequestError as exc:
+            raise MappslsNetworkError(0, f"Connection failed: {exc}") from exc
         self._handle_error(response)
         if response.status_code == 204:
             # No content – return empty result
@@ -354,7 +378,9 @@ __all__ = [
     "MappslsError",
     "MappslsAuthenticationError",
     "MappslsRateLimitError",
+    "MappslsQuotaExceededError",
     "MappslsTimeoutError",
     "MappslsAPIError",
+    "MappslsNetworkError",
     "MappslsResponseError",
 ]

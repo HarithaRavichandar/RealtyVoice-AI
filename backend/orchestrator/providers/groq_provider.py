@@ -14,6 +14,7 @@ from ...config import (
     GROQ_MODEL,
     GROQ_TIMEOUT_SECONDS,
 )
+from .failures import FailureKind, is_quota_response
 from .base import (
     BaseLLMProvider,
     Message,
@@ -25,18 +26,36 @@ from .base import (
 class GroqProviderError(RuntimeError):
     """Base exception for Groq provider failures."""
 
+    failure_kind = FailureKind.PROVIDER_ERROR
+
 class GroqAuthenticationError(GroqProviderError):
     """Raised when Groq rejects the API credentials."""
 
+    failure_kind = FailureKind.AUTH_FAILURE
+
+class GroqNetworkError(GroqProviderError):
+    """Raised when the Groq API cannot be reached."""
+
+    failure_kind = FailureKind.NETWORK_ERROR
+
 class GroqRateLimitError(GroqProviderError):
     """Raised when Groq rate limits the request."""
+
+    failure_kind = FailureKind.RATE_LIMITED
 
     def __init__(self, message: str, retry_after: Optional[str] = None):
         super().__init__(message)
         self.retry_after = retry_after
 
+class GroqQuotaExceededError(GroqRateLimitError):
+    """Raised when the Groq plan or credit limit is used up (do not retry)."""
+
+    failure_kind = FailureKind.QUOTA_EXCEEDED
+
 class GroqTimeoutError(GroqProviderError):
     """Raised when a Groq request times out."""
+
+    failure_kind = FailureKind.TIMEOUT
 
 class GroqAPIError(GroqProviderError):
     """Raised when Groq returns an unsuccessful HTTP response."""
@@ -47,6 +66,8 @@ class GroqAPIError(GroqProviderError):
 
 class GroqResponseError(GroqProviderError):
     """Raised when Groq returns an unexpected response structure."""
+
+    failure_kind = FailureKind.INVALID_RESPONSE
 
 class GroqProvider(BaseLLMProvider):
     """Asynchronous provider for Groq's OpenAI-compatible Chat API."""
@@ -280,11 +301,17 @@ class GroqProvider(BaseLLMProvider):
             raise GroqTimeoutError("Groq request timed out") from exc
 
         except httpx.RequestError as exc:
-            raise GroqProviderError("Unable to connect to Groq API") from exc
+            raise GroqNetworkError("Unable to connect to Groq API") from exc
 
         if response.status_code in (401, 403):
             raise GroqAuthenticationError(
                 "Groq rejected the API credentials"
+            )
+
+        if is_quota_response(response.status_code, response.text):
+            raise GroqQuotaExceededError(
+                "Groq usage quota exceeded",
+                retry_after=response.headers.get("retry-after"),
             )
 
         if response.status_code == 429:

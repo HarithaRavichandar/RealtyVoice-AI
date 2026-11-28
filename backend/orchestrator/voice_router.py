@@ -26,6 +26,7 @@ from .providers.sarvam_provider import (
     SarvamProviderError,
     SUPPORTED_TTS_LANGUAGES,
 )
+from .providers.failures import FailureKind, classify
 
 
 logger = logging.getLogger(__name__)
@@ -66,8 +67,23 @@ def _require_sarvam_key() -> None:
         )
 
 
+_VOICE_FAILURES = {
+    FailureKind.QUOTA_EXCEEDED: (503, "Voice service usage limit reached"),
+    FailureKind.NETWORK_ERROR: (502, "Voice service could not be reached"),
+}
+
+
 def _handle_sarvam_error(exc: SarvamProviderError) -> None:
     """Map Sarvam provider exceptions to appropriate HTTP errors."""
+    kind = classify(exc)
+    if kind in _VOICE_FAILURES:
+        status_code, detail = _VOICE_FAILURES[kind]
+        logger.warning("Sarvam failure: %s", kind.value)
+        raise HTTPException(
+            status_code=status_code,
+            detail=detail,
+            headers={"X-Failure-Kind": kind.value},
+        )
     if isinstance(exc, SarvamAuthenticationError):
         logger.error("Sarvam authentication failed")
         raise HTTPException(status_code=502, detail="Voice service authentication failed")

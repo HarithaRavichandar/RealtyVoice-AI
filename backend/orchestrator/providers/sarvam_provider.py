@@ -17,6 +17,7 @@ from typing import Optional
 import httpx
 
 from ...config import SARVAM_API_KEY, SARVAM_BASE_URL
+from .failures import FailureKind, is_quota_response
 
 logger = logging.getLogger(__name__)
 
@@ -28,21 +29,41 @@ logger = logging.getLogger(__name__)
 class SarvamProviderError(RuntimeError):
     """Base exception for Sarvam provider failures."""
 
+    failure_kind = FailureKind.PROVIDER_ERROR
+
 
 class SarvamAuthenticationError(SarvamProviderError):
     """Raised when Sarvam rejects the API credentials."""
 
+    failure_kind = FailureKind.AUTH_FAILURE
+
+
+class SarvamNetworkError(SarvamProviderError):
+    """Raised when the Sarvam API cannot be reached."""
+
+    failure_kind = FailureKind.NETWORK_ERROR
+
 
 class SarvamRateLimitError(SarvamProviderError):
     """Raised when Sarvam rate-limits the request."""
+
+    failure_kind = FailureKind.RATE_LIMITED
 
     def __init__(self, message: str, retry_after: Optional[str] = None):
         super().__init__(message)
         self.retry_after = retry_after
 
 
+class SarvamQuotaExceededError(SarvamRateLimitError):
+    """Raised when the Sarvam plan or credit limit is used up (do not retry)."""
+
+    failure_kind = FailureKind.QUOTA_EXCEEDED
+
+
 class SarvamTimeoutError(SarvamProviderError):
     """Raised when a Sarvam request times out."""
+
+    failure_kind = FailureKind.TIMEOUT
 
 
 class SarvamAPIError(SarvamProviderError):
@@ -55,6 +76,8 @@ class SarvamAPIError(SarvamProviderError):
 
 class SarvamResponseError(SarvamProviderError):
     """Raised when the Sarvam response is malformed."""
+
+    failure_kind = FailureKind.INVALID_RESPONSE
 
 
 # ---------------------------------------------------------------------------
@@ -183,6 +206,11 @@ class SarvamProvider:
             raise SarvamAuthenticationError(
                 "Sarvam rejected the API credentials"
             )
+        if is_quota_response(response.status_code, response.text):
+            raise SarvamQuotaExceededError(
+                "Sarvam usage quota exceeded",
+                retry_after=response.headers.get("retry-after"),
+            )
         if response.status_code == 429:
             raise SarvamRateLimitError(
                 "Sarvam API rate limit exceeded",
@@ -270,7 +298,7 @@ class SarvamProvider:
         except httpx.TimeoutException as exc:
             raise SarvamTimeoutError("Sarvam STT request timed out") from exc
         except httpx.RequestError as exc:
-            raise SarvamProviderError(
+            raise SarvamNetworkError(
                 "Unable to connect to Sarvam API"
             ) from exc
 
@@ -391,7 +419,7 @@ class SarvamProvider:
         except httpx.TimeoutException as exc:
             raise SarvamTimeoutError("Sarvam TTS request timed out") from exc
         except httpx.RequestError as exc:
-            raise SarvamProviderError(
+            raise SarvamNetworkError(
                 "Unable to connect to Sarvam API"
             ) from exc
 

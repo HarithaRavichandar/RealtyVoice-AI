@@ -22,7 +22,14 @@ DISPOSABLE_DB = PROJECT_ROOT / "data" / "realtyvoice_migration_test_20261113.sql
 
 # Sanity checks – ensure we are not pointing at the production DB and that the file exists
 PRODUCTION_DB = PROJECT_ROOT / "data" / "realtyvoice.db"
-assert DISPOSABLE_DB.is_file(), f"Disposable DB not found at {DISPOSABLE_DB}"
+# The disposable database is a local artefact (databases are git-ignored), so
+# on a fresh checkout or in CI it does not exist. Skip then, rather than fail
+# at import and break collection of the whole suite.
+if not DISPOSABLE_DB.is_file():
+    pytest.skip(
+        f"Disposable migration test DB not found at {DISPOSABLE_DB}",
+        allow_module_level=True,
+    )
 assert DISPOSABLE_DB != PRODUCTION_DB, "Test must not use the production database"
 
 @pytest.fixture(scope="module")

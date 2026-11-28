@@ -663,3 +663,217 @@ def test_lead_is_qualified_matched_and_taken_through_consent_and_callback(chat):
         assert lead.buyer_intent == "actively_searching"
         assert float(lead.qualification_score) == 76
         assert lead.score_breakdown["callback_request"]["points"] == 0
+
+
+# ---------------------------------------------------------------------------
+# Provider failures reach the customer as distinct, honest errors (4.9)
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize(
+    "error, status, kind",
+    [
+        ("GroqAuthenticationError", 502, "auth_failure"),
+        ("GroqQuotaExceededError", 503, "quota_exceeded"),
+        ("GroqRateLimitError", 429, "rate_limited"),
+        ("GroqTimeoutError", 504, "timeout"),
+        ("GroqNetworkError", 502, "network_error"),
+        ("GroqResponseError", 502, "invalid_response"),
+        ("GroqAPIError", 502, "provider_error"),
+    ],
+)
+def test_llm_failures_are_reported_by_kind_without_provider_detail(chat, monkeypatch, error, status, kind):
+    from backend.orchestrator.providers import groq_provider
+    from backend.orchestrator.providers.failures import CUSTOMER_MESSAGES, FailureKind
+
+    cls = getattr(groq_provider, error)
+    exc = cls(500, "SECRET upstream text") if error == "GroqAPIError" else cls("SECRET upstream text")
+    monkeypatch.setattr("backend.orchestrator.services.agent_service._PROVIDER_RETRY_DELAY", 0)
+
+    async def fail(messages, tools=None, **kwargs):
+        raise exc
+
+    chat.llm.chat_completion = fail
+    sid = chat.new_session()
+    response = chat.client.post("/api/agent/turn", json={"session_id": sid, "message": "hello"})
+
+    assert response.status_code == status
+    assert response.headers["x-failure-kind"] == kind
+    assert response.json()["detail"] == CUSTOMER_MESSAGES[FailureKind(kind)]
+    assert "SECRET" not in response.text
+
+
+def test_rate_limited_response_passes_retry_after_through(chat, monkeypatch):
+    from backend.orchestrator.providers.groq_provider import GroqRateLimitError
+
+    monkeypatch.setattr("backend.orchestrator.services.agent_service._PROVIDER_RETRY_DELAY", 0)
+
+    async def fail(messages, tools=None, **kwargs):
+        raise GroqRateLimitError("slow", retry_after="12")
+
+    chat.llm.chat_completion = fail
+    sid = chat.new_session()
+    response = chat.client.post("/api/agent/turn", json={"session_id": sid, "message": "hello"})
+    assert response.status_code == 429 and response.headers["retry-after"] == "12"
+
+
+def test_unclassified_errors_stay_a_generic_502_with_no_kind(chat):
+    async def fail(messages, tools=None, **kwargs):
+        raise RuntimeError("SECRET internal detail")
+
+    chat.llm.chat_completion = fail
+    sid = chat.new_session()
+    response = chat.client.post("/api/agent/turn", json={"session_id": sid, "message": "hello"})
+    assert response.status_code == 502
+    assert "x-failure-kind" not in response.headers
+    assert "SECRET" not in response.text
+
+
+def test_a_failed_turn_leaves_no_half_saved_data(chat):
+    from backend.orchestrator.providers.groq_provider import GroqTimeoutError
+
+    async def fail(messages, tools=None, **kwargs):
+        raise GroqTimeoutError("t")
+
+    sid = chat.new_session()
+    chat.llm.chat_completion = fail
+    chat.client.post("/api/agent/turn", json={"session_id": sid, "message": "I want a flat"})
+    with chat.session_factory() as db:
+        assert db.query(Message).count() == 0
+
+
+# ---------------------------------------------------------------------------
+# Sessions cannot see each other's data (4.10)
+# ---------------------------------------------------------------------------
+
+def _two_customers(chat):
+    """Asha (session A) saves requirements, a lead, consent and a callback."""
+    a = chat.new_session()
+    chat.turn(
+        a,
+        "I'm Asha, 9876543210. 3 BHK in Bengaluru, call me tomorrow at 10",
+        tool("update_customer_requirements", {"location": "Bengaluru", "configuration": "3 BHK", "budget_max": "12000000"}),
+        tool("register_lead", {"customer_name": "Asha Rao", "phone": "9876543210"}),
+        tool("record_consent", {"consent_type": "callback_contact", "granted": True}),
+        tool("create_callback_request", {
+            "preferred_contact": "phone_call", "preferred_date": "2026-12-05",
+            "preferred_time": "10:00", "reason": "Asha wants a visit",
+        }),
+        say("Booked."),
+    )
+    return a, chat.new_session()
+
+
+def test_requirements_do_not_leak_into_another_session(chat):
+    a, b = _two_customers(chat)
+
+    r = chat.turn(b, "Show me what you have", tool("search_properties", {}), say("Here is everything."))
+
+    assert r["requirements"]["location"] is None and r["requirements"]["budget_max"] is None
+    assert chat.tool_payloads(key="applied_defaults")[0]["applied_defaults"] == {}
+    assert _ids(r) == set(chat.ids.values())  # nothing filtered by A's saved needs
+
+
+def test_the_model_for_session_b_never_sees_session_a_text(chat):
+    a, b = _two_customers(chat)
+
+    chat.turn(b, "Hello there", say("Hi! How can I help?"))
+
+    seen = " ".join((m.content or "") for call in chat.last_calls for m in call["messages"])
+    # (Static prompt text mentions cities and sizes, so check A's own data.)
+    for secret in ("Asha", "9876543210", "12000000", "Asha wants a visit"):
+        assert secret not in seen
+
+
+def test_lead_consent_and_callback_do_not_carry_over(chat):
+    a, b = _two_customers(chat)
+
+    r = chat.turn(
+        b, "Please call me",
+        tool("create_callback_request", {
+            "preferred_contact": "phone_call", "preferred_date": "2026-12-06",
+            "preferred_time": "11:00", "reason": "x",
+        }),
+        say("I need your details first."),
+    )
+    assert chat.tool_payloads(key="lead_required")[0]["error"] == "lead_required"
+
+    with chat.session_factory() as db:
+        from backend.models import CallbackRequest, ConsentRecord, Lead
+        assert db.query(Lead).count() == 1
+        assert db.query(CallbackRequest).count() == 1
+        assert db.query(ConsentRecord).count() == 1
+
+
+def test_a_second_customers_consent_does_not_authorise_the_first_customers_callback(chat):
+    a, b = _two_customers(chat)
+    chat.turn(
+        b, "I'm Ravi, 9123456780",
+        tool("register_lead", {"customer_name": "Ravi", "phone": "9123456780"}),
+        say("Thanks Ravi."),
+    )
+    chat.turn(
+        b, "Call me",
+        tool("create_callback_request", {
+            "preferred_contact": "phone_call", "preferred_date": "2026-12-06",
+            "preferred_time": "11:00", "reason": "x",
+        }),
+        say("I need your permission first."),
+    )
+    assert chat.tool_payloads(key="callback_consent_required")[0]["error"] == "callback_consent_required"
+
+
+def test_revoking_consent_in_one_session_does_not_touch_another(chat):
+    from backend.models import CallbackRequest
+
+    a, b = _two_customers(chat)
+    chat.turn(
+        b, "I'm Ravi", tool("register_lead", {"phone": "9123456780"}),
+        tool("record_consent", {"consent_type": "callback_contact", "granted": True}),
+        tool("create_callback_request", {
+            "preferred_contact": "email", "preferred_date": "2026-12-06",
+            "preferred_time": "11:00", "reason": "Ravi",
+        }),
+        say("Booked."),
+    )
+    chat.turn(a, "Don't call me", tool("record_consent", {"consent_type": "callback_contact", "granted": False}), say("Cancelled."))
+
+    with chat.session_factory() as db:
+        by_reason = {c.reason: c.status for c in db.query(CallbackRequest).all()}
+    assert by_reason == {"Asha wants a visit": "Cancelled", "Ravi": "Pending"}
+
+
+def test_message_history_is_scoped_to_the_session(chat):
+    a, b = _two_customers(chat)
+    chat.turn(b, "Hello from B", say("Hi B"))
+
+    texts_b = [m["content"] for m in chat.client.get(f"/api/conversations/{b}/messages").json()]
+    texts_a = [m["content"] for m in chat.client.get(f"/api/conversations/{a}/messages").json()]
+    assert "Hello from B" in texts_b and not any("Asha" in t for t in texts_b)
+    assert "Hello from B" not in texts_a
+
+
+def test_unknown_and_guessed_session_ids_reveal_nothing(chat):
+    a, _ = _two_customers(chat)
+    for bad in ("1", "0", a[:-1] + ("0" if a[-1] != "0" else "1"), "../" + a, a.upper() + "x"):
+        assert chat.client.get(f"/api/conversations/{bad}").status_code in (404, 422)
+        assert chat.client.get(f"/api/conversations/{bad}/messages").status_code in (404, 422)
+        assert chat.client.post("/api/agent/turn", json={"session_id": bad, "message": "hi"}).status_code == 404
+
+
+def test_session_ids_are_long_random_and_unique(chat):
+    ids = {chat.new_session() for _ in range(25)}
+    assert len(ids) == 25
+    assert all(len(i) >= 32 and i.isalnum() for i in ids)
+
+
+def test_tool_audit_rows_belong_only_to_their_own_conversation(chat):
+    from backend.models import Conversation
+
+    a, b = _two_customers(chat)
+    chat.turn(b, "hi", say("Hello"))
+    with chat.session_factory() as db:
+        conv_a = db.query(Conversation).filter_by(external_session_id=a).one()
+        conv_b = db.query(Conversation).filter_by(external_session_id=b).one()
+        tools_a = [m for m in db.query(Message).filter_by(conversation_id=conv_a.conversation_id) if m.role == "tool"]
+        tools_b = [m for m in db.query(Message).filter_by(conversation_id=conv_b.conversation_id) if m.role == "tool"]
+    assert len(tools_a) == 4 and tools_b == []

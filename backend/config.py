@@ -6,6 +6,7 @@
 - Exposes DATABASE_URL which can be overridden via env.
 """
 import os
+import re
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -75,11 +76,67 @@ LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").strip().upper()
 # CORS: comma-separated list of allowed origins.
 # Default allows the local dev server only.
 _cors_raw = os.getenv("CORS_ORIGINS", "http://localhost:8000").strip()
-CORS_ORIGINS: list[str] = [
-    origin.strip()
-    for origin in _cors_raw.split(",")
-    if origin.strip()
-]
+
+
+def parse_cors_origins(raw: str) -> list[str]:
+    """Parse and validate a comma-separated list of allowed origins.
+
+    Each origin must be ``scheme://host[:port]`` with no path. A wildcard is
+    refused: this API is not meant to be callable from any website, and a
+    wildcard combined with credentials is unsafe. Trailing slashes are
+    removed and duplicates dropped.
+    """
+    origins: list[str] = []
+    for item in raw.split(","):
+        origin = item.strip().rstrip("/")
+        if not origin:
+            continue
+        if origin == "*":
+            raise ValueError(
+                "CORS_ORIGINS must list explicit origins; '*' is not allowed"
+            )
+        if not re.fullmatch(r"https?://[A-Za-z0-9.-]+(:\d{1,5})?", origin):
+            raise ValueError(
+                f"Invalid CORS origin {item.strip()!r}: use scheme://host[:port] "
+                "with no path"
+            )
+        if origin not in origins:
+            origins.append(origin)
+    return origins
+
+
+def _bool_env(name: str, default: bool) -> bool:
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in ("1", "true", "yes")
+
+
+CORS_ORIGINS: list[str] = parse_cors_origins(_cors_raw)
+# Credentials (cookies) are not used by this application, so they are off
+# unless explicitly enabled.
+CORS_ALLOW_CREDENTIALS = _bool_env("CORS_ALLOW_CREDENTIALS", False)
+
+# ---------------------------------------------------------------------------
+# Request protection
+# ---------------------------------------------------------------------------
+
+LOG_FORMAT = os.getenv("LOG_FORMAT", "json").strip().lower()
+if LOG_FORMAT not in ("json", "text"):
+    raise ValueError("LOG_FORMAT must be 'json' or 'text'")
+
+# Rate limits are per client per minute. Set RATE_LIMIT_ENABLED=false to turn off.
+RATE_LIMIT_ENABLED = _bool_env("RATE_LIMIT_ENABLED", True)
+RATE_LIMIT_AGENT_PER_MINUTE = _positive_int_env("RATE_LIMIT_AGENT_PER_MINUTE", 30)
+RATE_LIMIT_VOICE_PER_MINUTE = _positive_int_env("RATE_LIMIT_VOICE_PER_MINUTE", 20)
+RATE_LIMIT_DEFAULT_PER_MINUTE = _positive_int_env("RATE_LIMIT_DEFAULT_PER_MINUTE", 120)
+# Only trust X-Forwarded-For when running behind a proxy you control.
+TRUST_PROXY_HEADERS = _bool_env("TRUST_PROXY_HEADERS", False)
+
+# Request body limits in bytes. Agent/JSON bodies are tiny (a 4000-character
+# message); voice uploads carry audio plus multipart overhead.
+MAX_JSON_BODY_BYTES = _positive_int_env("MAX_JSON_BODY_BYTES", 64 * 1024)
+MAX_AUDIO_UPLOAD_BYTES = _positive_int_env("MAX_AUDIO_UPLOAD_BYTES", 10 * 1024 * 1024)
 
 # ---------------------------------------------------------------------------
 # Sarvam AI (voice: STT + TTS)
@@ -115,6 +172,16 @@ __all__ = [
     "DEBUG",
     "LOG_LEVEL",
     "CORS_ORIGINS",
+    "CORS_ALLOW_CREDENTIALS",
+    "parse_cors_origins",
+    "LOG_FORMAT",
+    "RATE_LIMIT_ENABLED",
+    "RATE_LIMIT_AGENT_PER_MINUTE",
+    "RATE_LIMIT_VOICE_PER_MINUTE",
+    "RATE_LIMIT_DEFAULT_PER_MINUTE",
+    "TRUST_PROXY_HEADERS",
+    "MAX_JSON_BODY_BYTES",
+    "MAX_AUDIO_UPLOAD_BYTES",
     "SARVAM_API_KEY",
     "SARVAM_BASE_URL",
     "MAPPLS_API_KEY",
