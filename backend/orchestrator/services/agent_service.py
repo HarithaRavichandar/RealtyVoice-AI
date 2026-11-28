@@ -9,6 +9,7 @@ responsibility.
 from __future__ import annotations
 
 import asyncio
+import uuid
 import json
 import logging
 from dataclasses import dataclass
@@ -33,7 +34,11 @@ from .context_builder import build_context
 from .message import add_message, add_tool_message
 from .provider_tools import get_provider_tool_definitions
 from .speech_text import prepare_spoken_response
-from .tool_executor import execute_tool, execute_nearby_amenities
+from .tool_executor import (
+    execute_nearby_amenities,
+    execute_search_live_properties,
+    execute_tool,
+)
 from .tool_registry import lookup_tool
 
 logger = logging.getLogger(__name__)
@@ -252,7 +257,10 @@ EXPLAINING RECOMMENDATIONS:
     note to make a property sound better, and never turn a missing
     value into a guess.
 
-41. Recommend only properties returned by search_properties. If total
+41. Recommend only properties returned by search_properties,
+    recommend_properties or (when the customer explicitly asked for live
+    listings) search_live_properties, and keep those sources separate as
+    described in the LIVE LISTINGS rules. If total
     is larger than the items shown, say how many matched overall. If
     nothing matched, say so and follow the location and availability
     guidance above instead of describing unrelated properties.
@@ -286,6 +294,55 @@ LEAD QUALIFICATION, MATCHING AND CALLBACKS:
     was cancelled. If they withdraw contact_storage consent, confirm that
     you will no longer use their contact details for follow-up and do
     not ask for them again unless they re-consent.
+
+LIVE LISTINGS (search_live_properties):
+
+46. Call search_live_properties ONLY when the customer explicitly asks
+    for live, current or real 99acres listings or real inventory. Every
+    ordinary property request uses search_properties. Never switch to
+    live search on your own, and never call both tools in order to
+    combine their results.
+
+47. There are two separate inventories. search_properties,
+    recommend_properties and get_property_details return the demo
+    dataset (synthetic and historical records). search_live_properties
+    returns live 99acres listings fetched through the API.SH data
+    service. Never describe demo data as live, current or available now,
+    and never describe live listings as part of the demo dataset. State
+    the source of every property you recommend: for a live listing use
+    its "source" field and mention its url so the customer can open it.
+
+48. Never mix the two. If the customer wants both, present them in
+    separate, clearly labelled groups. Never top up a short or empty
+    live result with demo properties, and never offer demo properties as
+    a stand-in unless the customer asks for them.
+
+49. Live searches use a small credit allowance per conversation. Make
+    one call per customer request, never repeat it, and run another live
+    search only when the customer asks again. When the result's
+    credits.remaining is 0, tell the customer no more live searches are
+    possible in this conversation.
+
+50. If search_live_properties returns an error, say so plainly:
+    live_credit_limit_reached - the live-search limit for this
+    conversation has been reached; do not call it again. live_search_failed
+    - the live listing service failed (say what the message says); do
+    not retry in the same turn and do not silently use demo data.
+    live_not_configured or live_search_disabled - live listings are not
+    available right now. live_duplicate_request - that search was already
+    made. Never say there are no listings because a call failed, and
+    never fall back to search_properties without the customer asking.
+
+51. Describe a live listing only with the fields in its item. Never
+    invent a price, availability, possession date, floor, amenities,
+    advertiser or contact detail. Quote possession_text as given. Where
+    a check says "unknown" or "not_requested", say it could not be
+    confirmed. If "excluded" shows listings held out (for example
+    budget_unknown: listings with no price) or removed for not matching,
+    mention that briefly. Say the results were fetched at "fetched_at"
+    and that availability must be confirmed on the listing itself. Live
+    listings are not saved, scored or matched to a lead, and
+    get_property_details does not work for them.
 """
 
 
@@ -432,6 +489,36 @@ _TOOL_ERROR_HINTS: dict[str, str] = {
         "exact place, and offer to try the wider area or city name instead. "
         "Do not estimate or invent amenities, distances or travel times."
     ),
+    "live_credit_limit_reached": (
+        "The live-search limit for this conversation has been reached and "
+        "no request was sent. Tell the customer that no more live "
+        "searches are possible in this conversation. Do not call "
+        "search_live_properties again and do not substitute demo results "
+        "unless the customer asks for them."
+    ),
+    "live_search_failed": (
+        "The live listing service failed (see failure_kind and message). "
+        "Do not retry in this turn. Tell the customer the live listings "
+        "could not be fetched. Never say there are no listings because of "
+        "this failure, and do not substitute demo results unless the "
+        "customer asks for them."
+    ),
+    "live_not_configured": (
+        "Live listings are not available right now. Tell the customer, and "
+        "do not retry or substitute demo results unless they ask."
+    ),
+    "live_search_disabled": (
+        "Live listing search is turned off. Tell the customer it is not "
+        "available; do not retry or substitute demo results unless they ask."
+    ),
+    "live_duplicate_request": (
+        "This live search was already made, so it was not sent again. Use "
+        "the earlier result in the conversation."
+    ),
+    "live_invalid_request": (
+        "A location is needed for a live search. Ask the customer where to "
+        "search."
+    ),
     "mappls_api_error": (
         "The map service failed (see failure_kind). Retry once only when "
         "failure_kind is timeout, network_error or rate_limited; for "
@@ -537,7 +624,17 @@ async def _execute_registered_tool(
 
         # Handle async tools (e.g. nearby_amenities via Mappls API).
         if result.get("_async_pending"):
-            if tool_name == "nearby_amenities":
+            if tool_name == "search_live_properties":
+                result = await execute_search_live_properties(
+                    session=session,
+                    conversation_id=conversation_id,
+                    criteria=result["criteria"],
+                    applied_defaults=result.get("applied_defaults"),
+                    # One identifier per tool call: a repeated call is
+                    # recognised and neither sent nor counted again.
+                    request_id=f"{turn_id}:{tool_call.id or uuid.uuid4().hex}",
+                )
+            elif tool_name == "nearby_amenities":
                 result = await execute_nearby_amenities(
                     location=result["location"],
                     categories=result.get("categories"),

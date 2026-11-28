@@ -10,4 +10,4 @@ from .message import Message
 from .callback import CallbackRequest
 from .consent import ConsentRecord
 from .lead_property_match import LeadPropertyMatch
-
+from .live_credit import LiveCreditEntry

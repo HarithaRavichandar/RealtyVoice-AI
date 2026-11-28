@@ -37,6 +37,10 @@ from .services.message import (
 )
 
 from .services.agent_service import run_agent_loop
+from backend.services.inventory.sql_ledger import (
+    forget_pending as forget_live_credit_entries,
+    restore_after_rollback as restore_live_credits,
+)
 
 
 # --------------------------------------------------
@@ -74,6 +78,11 @@ def _collect_matched_properties(
 
     for tool_entry in tool_results:
         result = tool_entry.get("result") or {}
+
+        # Live listings are a separate inventory with their own identifiers;
+        # they are never reported as demo property records.
+        if result.get("inventory") == "live":
+            continue
 
         candidates = []
 
@@ -171,6 +180,21 @@ def _build_agent_response(
             ),
             message=reply,
             property_ids=property_ids,
+        )
+
+    elif "search_live_properties" in tool_names:
+        # Live results are shown in the reply; there are no demo property
+        # ids to attach.
+        intent = "property_search"
+
+        live_failed = all(
+            entry.get("tool_name") != "search_live_properties"
+            or (isinstance(entry.get("result"), dict) and entry["result"].get("error"))
+            for entry in tool_results
+        )
+        next_action = NextAction(
+            action="error" if live_failed else "await_user",
+            message=reply,
         )
 
     elif any(
@@ -367,11 +391,13 @@ async def agent_turn(
         )
 
         db.commit()
+        forget_live_credit_entries(db)
 
         return response
 
     except ValueError as exc:
         db.rollback()
+        restore_live_credits(db)
 
         if "conversation not found" in str(exc).lower():
             raise HTTPException(
@@ -389,6 +415,9 @@ async def agent_turn(
         logger.exception("Agent turn failed: %s", exc)
 
         db.rollback()
+        # Credits already spent on a live search stay on the record even
+        # though the rest of this turn was discarded.
+        restore_live_credits(db)
 
         kind = classify(exc)
         if kind in FAILURE_HTTP_STATUS:

@@ -59,6 +59,7 @@ CREDIT_LIMIT_REACHED = "credit_limit_reached"
 INVALID_REQUEST = "invalid_request"
 NOT_CONFIGURED = "not_configured"
 FAILED = "failed"
+DUPLICATE_REQUEST = "duplicate_request"
 
 # Failures after which API.SH did not do the work (refused calls). Everything
 # else that was sent is counted as one credit: the documentation does not say
@@ -76,6 +77,9 @@ _MESSAGES = {
     INVALID_REQUEST: "A location is needed to search live listings.",
     NOT_CONFIGURED: "Live listings are not available right now.",
     NO_RESULTS: "No live listings matched this search.",
+    DUPLICATE_REQUEST: (
+        "This live search was already made, so it was not sent again."
+    ),
 }
 
 
@@ -92,6 +96,12 @@ class InventoryOutcome:
     credits_charged: int = 0
     credits_used_total: Optional[int] = None
     credits_limit: Optional[int] = None
+    # Split of ``credits_charged``: what the provider reported, and what was
+    # counted toward the limit without confirmation. Only filled when the
+    # ledger supports reservations.
+    credits_confirmed: int = 0
+    credits_unconfirmed: int = 0
+    request_id: Optional[str] = None
     # Always false: nothing here substitutes another inventory for a failure.
     fallback_used: bool = False
 
@@ -155,12 +165,17 @@ class InventorySearchService:
         inventory: Inventory,
         conversation_key: str,
         criteria: SearchCriteria,
+        *,
+        request_id: Optional[str] = None,
     ) -> InventoryOutcome:
         provider = self._providers.get(inventory)
         if provider is None:
             raise ValueError(f"no provider is configured for {inventory.value!r} inventory")
         live = provider.is_live
         limit = self._policy.limit_per_conversation if live else None
+        # A ledger that can reserve records the request before it is sent and
+        # refuses a repeated request id. Others keep the simple add() flow.
+        reserving = live and request_id is not None and hasattr(self._ledger, "reserve")
 
         if live and self._ledger.used(conversation_key) >= self._policy.limit_per_conversation:
             return InventoryOutcome(
@@ -170,28 +185,70 @@ class InventorySearchService:
                 message=_MESSAGES[CREDIT_LIMIT_REACHED],
                 credits_used_total=self._ledger.used(conversation_key),
                 credits_limit=limit,
+                request_id=request_id,
             )
+
+        if reserving and self._ledger.reserve(
+            conversation_key, provider.source_name, request_id
+        ) == "duplicate":
+            return InventoryOutcome(
+                status=DUPLICATE_REQUEST,
+                inventory=inventory,
+                source=provider.source_name,
+                message=_MESSAGES[DUPLICATE_REQUEST],
+                credits_used_total=self._ledger.used(conversation_key),
+                credits_limit=limit,
+                request_id=request_id,
+            )
+
+        def settle(confirmed: int, unconfirmed: int, outcome: str,
+                   kind: Optional[FailureKind] = None) -> None:
+            """Record the final credit position of this request."""
+            if reserving:
+                self._ledger.settle(
+                    conversation_key, provider.source_name, request_id,
+                    consumed=confirmed, unconfirmed=unconfirmed, outcome=outcome,
+                    failure_kind=kind.value if kind else None,
+                )
+            elif confirmed + unconfirmed:
+                self._ledger.add(conversation_key, confirmed + unconfirmed)
 
         try:
             result = await provider.search(criteria)
         except InventoryRequestError:
-            return self._failure(provider, INVALID_REQUEST, None, 0, conversation_key, limit)
+            settle(0, 0, INVALID_REQUEST)
+            return self._failure(provider, INVALID_REQUEST, None, 0, conversation_key, limit,
+                                 request_id=request_id)
         except InventoryConfigError:
-            return self._failure(provider, NOT_CONFIGURED, FailureKind.AUTH_FAILURE, 0, conversation_key, limit)
+            settle(0, 0, NOT_CONFIGURED, FailureKind.AUTH_FAILURE)
+            return self._failure(provider, NOT_CONFIGURED, FailureKind.AUTH_FAILURE, 0,
+                                 conversation_key, limit, request_id=request_id)
         except InventoryError as exc:
+            # Refused calls are free per the API.SH documentation. Any other
+            # failure after the request was sent is counted conservatively,
+            # but as unconfirmed: its real cost is not known.
             charge = 0
             if live and exc.request_sent and exc.failure_kind not in _FREE_FAILURES:
                 charge = 1
-            return self._failure(provider, FAILED, exc.failure_kind, charge, conversation_key, limit)
+            settle(0, charge, FAILED, exc.failure_kind)
+            return self._failure(provider, FAILED, exc.failure_kind, charge, conversation_key,
+                                 limit, request_id=request_id, unconfirmed=charge)
         except Exception:
-            if live:
-                self._ledger.add(conversation_key, 1)  # a call may have been made
+            # A call may have been made: keep the conservative hold.
+            if reserving:
+                pass  # the pending hold already counts
+            elif live:
+                self._ledger.add(conversation_key, 1)
             raise
 
-        charged = 0
+        confirmed = unconfirmed = 0
         if live:
-            charged = result.credits_used if result.credits_used is not None else 1
-            self._ledger.add(conversation_key, charged)
+            if result.credits_used is not None:
+                confirmed = result.credits_used
+            else:
+                unconfirmed = 1  # call succeeded but its cost was not reported
+            settle(confirmed, unconfirmed, OK if result.listings else NO_RESULTS)
+        charged = confirmed + unconfirmed
 
         result = self._postprocess(result, criteria, live)
         status = OK if result.listings else NO_RESULTS
@@ -204,6 +261,9 @@ class InventorySearchService:
             credits_charged=charged,
             credits_used_total=self._ledger.used(conversation_key) if live else None,
             credits_limit=limit,
+            credits_confirmed=confirmed,
+            credits_unconfirmed=unconfirmed,
+            request_id=request_id,
         )
 
     # ------------------------------------------------------------------
@@ -215,9 +275,13 @@ class InventorySearchService:
         charge: int,
         conversation_key: str,
         limit: Optional[int],
+        *,
+        request_id: Optional[str] = None,
+        unconfirmed: int = 0,
     ) -> InventoryOutcome:
         live = provider.is_live
-        if charge:
+        # With a reserving ledger the charge was already recorded by settle().
+        if charge and not (request_id is not None and hasattr(self._ledger, "reserve")):
             self._ledger.add(conversation_key, charge)
         message = _MESSAGES.get(status) if status != FAILED else CUSTOMER_MESSAGES.get(kind)
         return InventoryOutcome(
@@ -229,6 +293,8 @@ class InventorySearchService:
             credits_charged=charge,
             credits_used_total=self._ledger.used(conversation_key) if live else None,
             credits_limit=limit,
+            credits_unconfirmed=unconfirmed,
+            request_id=request_id,
         )
 
     @staticmethod

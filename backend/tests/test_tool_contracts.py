@@ -9,6 +9,7 @@ from datetime import date
 from decimal import Decimal
 from backend.orchestrator.tools.schemas import (
     SearchPropertiesRequest,
+    SearchLivePropertiesRequest,
     GetPropertyDetailsRequest,
     UpdateCustomerRequirementsRequest,
     CreateCallbackRequest,
@@ -227,6 +228,7 @@ def test_create_callback_unknown_field():
 def test_tool_registry_contents():
     expected = {
         "search_properties": SearchPropertiesRequest,
+        "search_live_properties": SearchLivePropertiesRequest,
         "get_property_details": GetPropertyDetailsRequest,
         "update_customer_requirements": UpdateCustomerRequirementsRequest,
         "create_callback_request": CreateCallbackRequest,

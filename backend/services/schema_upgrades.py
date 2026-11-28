@@ -41,3 +41,18 @@ def ensure_lead_qualification_columns(engine: Engine) -> List[str]:
             )
     logger.info("Added lead qualification columns: %s", ", ".join(missing))
     return missing
+
+
+def ensure_live_credit_ledger_table(engine: Engine) -> bool:
+    """Create the live-credit ledger table when it is missing.
+
+    Purely additive: it creates ``live_credit_ledger`` if absent and never
+    touches any other table or row. Returns True when the table was created.
+    """
+    from backend.models.live_credit import LiveCreditEntry
+
+    if "live_credit_ledger" in inspect(engine).get_table_names():
+        return False
+    LiveCreditEntry.__table__.create(bind=engine, checkfirst=True)
+    logger.info("Created table live_credit_ledger")
+    return True

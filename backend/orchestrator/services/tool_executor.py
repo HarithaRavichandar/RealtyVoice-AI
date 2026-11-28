@@ -22,6 +22,7 @@ from sqlalchemy.orm import Session
 from ..schemas import CustomerRequirements
 from ..tools.schemas import (
     SearchPropertiesRequest,
+    SearchLivePropertiesRequest,
     GetPropertyDetailsRequest,
     UpdateCustomerRequirementsRequest,
     CreateCallbackRequest,
@@ -122,6 +123,28 @@ def _apply_saved_requirements(
     return final, final.model_dump(mode="json", include=set(applied))
 
 
+def _apply_saved_to_live_request(
+    session: Session,
+    conversation_id: Optional[int],
+    request: SearchLivePropertiesRequest,
+) -> tuple[SearchLivePropertiesRequest, Dict[str, Any]]:
+    """Fill live-search criteria the caller left out from saved requirements.
+
+    Same rules as the demo search (explicit values always win; unusable saved
+    values are skipped). Availability is not a live criterion, so it is never
+    carried over.
+    """
+    as_search = SearchPropertiesRequest.model_validate(
+        request.model_dump(exclude_unset=True)
+    )
+    final, applied = _apply_saved_requirements(session, conversation_id, as_search)
+    applied.pop("availability", None)
+    if not applied:
+        return request, {}
+    merged = final.model_dump(exclude_none=True, exclude={"availability"})
+    return SearchLivePropertiesRequest.model_validate(merged), applied
+
+
 def _location_suggestions(
     service: PropertySearchService, location: str
 ) -> list[dict[str, str]]:
@@ -170,6 +193,8 @@ def execute_tool(
     # ---------------------------------------------------------------
     if tool_name == "search_properties":
         Schema = SearchPropertiesRequest
+    elif tool_name == "search_live_properties":
+        Schema = SearchLivePropertiesRequest
     elif tool_name == "get_property_details":
         Schema = GetPropertyDetailsRequest
     elif tool_name == "update_customer_requirements":
@@ -496,6 +521,22 @@ def execute_tool(
         }
 
     # ---------------------------------------------------------------
+    # Live property search (async - returns a deferred marker)
+    # ---------------------------------------------------------------
+    if tool_name == "search_live_properties":
+        if conversation_id is None:
+            return {"error": "missing_conversation_id", "tool": tool_name}
+        request, applied_defaults = _apply_saved_to_live_request(
+            session, conversation_id, request
+        )
+        return {
+            "tool": tool_name,
+            "_async_pending": True,
+            "criteria": request.model_dump(exclude_none=True),
+            "applied_defaults": applied_defaults,
+        }
+
+    # ---------------------------------------------------------------
     # Nearby amenities (async – returns a deferred marker)
     # ---------------------------------------------------------------
     if tool_name == "nearby_amenities":
@@ -712,3 +753,226 @@ async def execute_nearby_amenities(
             # Customer-safe wording only: no provider text, tokens or URLs.
             "message": CUSTOMER_MESSAGES.get(kind, "The map service failed."),
         }
+
+
+# ---------------------------------------------------------------
+# Async executor for live (API.SH / 99acres) property search
+# ---------------------------------------------------------------
+
+#: Most listings handed to the model from one live search.
+MAX_LIVE_ITEMS = 10
+
+_LIVE_ERROR_CODES = {
+    "credit_limit_reached": "live_credit_limit_reached",
+    "failed": "live_search_failed",
+    "not_configured": "live_not_configured",
+    "invalid_request": "live_invalid_request",
+    "duplicate_request": "live_duplicate_request",
+}
+
+
+def _live_configured() -> bool:
+    """Whether an API.SH key is set. Never returns or logs the key."""
+    from backend import config
+
+    return bool(config.APISH_API_KEY)
+
+
+def _create_live_provider():
+    """Build the live provider. Tests replace this with a mock provider."""
+    from backend import config
+    from backend.services.inventory import ApishPropertyProvider
+
+    return ApishPropertyProvider(
+        api_key=config.APISH_API_KEY,
+        base_url=config.APISH_BASE_URL,
+        timeout=config.APISH_TIMEOUT_SECONDS,
+    )
+
+
+def _live_item(listing: Dict[str, Any]) -> Dict[str, Any]:
+    """A compact, source-labelled view of one live listing for the model."""
+    ref = listing.get("ref") or {}
+    month = listing.get("possession_month")
+    item: Dict[str, Any] = {
+        "listing_id": ref.get("external_id"),
+        "inventory": "live",
+        "source": listing.get("source_label"),
+        "title": listing.get("title"),
+        "url": listing.get("url"),
+        "price": listing.get("price"),
+        "price_max": listing.get("price_max"),
+        "price_text": listing.get("price_text"),
+        "price_per_sqft": listing.get("price_per_sqft"),
+        "currency": listing.get("currency"),
+        "property_type_text": listing.get("property_type_text"),
+        "bedrooms": listing.get("bedrooms"),
+        "bathrooms": listing.get("bathrooms"),
+        "balconies": listing.get("balconies"),
+        "area_text": listing.get("area_text"),
+        "carpet_sqft": listing.get("carpet_sqft"),
+        "super_builtup_sqft": listing.get("super_builtup_sqft"),
+        "builtup_sqft": listing.get("builtup_sqft"),
+        "floor": listing.get("floor"),
+        "total_floors": listing.get("total_floors"),
+        "furnishing": listing.get("furnishing"),
+        "transaction": listing.get("transaction"),
+        "ownership": listing.get("ownership"),
+        "society": listing.get("society"),
+        "locality": listing.get("locality"),
+        "city": listing.get("city"),
+        "verified": listing.get("verified"),
+        "advertiser_type": listing.get("advertiser_type"),
+        "advertiser_name": listing.get("advertiser_name"),
+        "posted": listing.get("posted"),
+        "updated": listing.get("updated"),
+        "possession_text": listing.get("possession_text"),
+        "possession_month": (
+            f"{month[0]:04d}-{month[1]:02d}"
+            if isinstance(month, (list, tuple)) and len(month) == 2
+            else None
+        ),
+        "availability_status": listing.get("availability_status"),
+        "tags": listing.get("tags") or None,
+        "fetched_at": listing.get("fetched_at"),
+        "checks": listing.get("checks") or None,
+    }
+    return {k: v for k, v in item.items() if v is not None}
+
+
+def _live_credit_summary(outcome_dict: Dict[str, Any]) -> Dict[str, Any]:
+    limit = outcome_dict.get("credits_limit")
+    total = outcome_dict.get("credits_used_total")
+    summary: Dict[str, Any] = {
+        "used_this_search": outcome_dict.get("credits_charged", 0),
+        "confirmed_by_provider_this_search": outcome_dict.get("credits_confirmed", 0),
+        "counted_without_confirmation_this_search": outcome_dict.get("credits_unconfirmed", 0),
+        "used_in_conversation": total,
+        "limit_per_conversation": limit,
+    }
+    if isinstance(limit, int) and isinstance(total, int):
+        summary["remaining"] = max(limit - total, 0)
+    return summary
+
+
+def format_live_outcome(
+    outcome: Any, applied_defaults: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
+    """Turn an InventoryOutcome into the tool result the model sees."""
+    from backend.services.inventory.normalize import APISH_SOURCE_LABEL
+
+    data = outcome.to_dict()
+    response: Dict[str, Any] = {
+        "tool": "search_live_properties",
+        "inventory": "live",
+        "source": data.get("source"),
+        "source_label": APISH_SOURCE_LABEL,
+        "status": data.get("status"),
+        # Nothing here ever substitutes demo data for a live failure.
+        "fallback_used": False,
+        "credits": _live_credit_summary(data),
+        "applied_defaults": applied_defaults or {},
+    }
+    status = data.get("status")
+    if status in _LIVE_ERROR_CODES:
+        response["error"] = _LIVE_ERROR_CODES[status]
+        response["message"] = data.get("message")
+        if data.get("failure_kind"):
+            response["failure_kind"] = data["failure_kind"]
+        return response
+
+    result = data.get("result") or {}
+    listings = result.get("listings") or []
+    items = [_live_item(listing) for listing in listings[:MAX_LIVE_ITEMS]]
+    response.update(
+        {
+            "total": len(listings),
+            "shown": len(items),
+            "items": items,
+            "excluded": result.get("excluded") or {},
+            "upstream_total": result.get("upstream_total"),
+            "matched_locality": result.get("matched_locality"),
+            "fetched_at": result.get("fetched_at"),
+            "served_from_provider_cache": result.get("cached"),
+            "notes": result.get("notes") or [],
+        }
+    )
+    if data.get("message"):
+        response["message"] = data["message"]
+    return {k: v for k, v in response.items() if v is not None}
+
+
+async def execute_search_live_properties(
+    *,
+    session: Session,
+    conversation_id: Optional[int],
+    criteria: Dict[str, Any],
+    applied_defaults: Optional[Dict[str, Any]] = None,
+    request_id: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Run one live search for this conversation and return the tool result.
+
+    One call, one credit-controlled request: no retries, no pagination, no
+    fresh/raw options, and no fallback to demo data when it fails.
+    """
+    import uuid
+
+    from backend import config
+    from backend.services.inventory import (
+        CreditPolicy,
+        Inventory,
+        InventorySearchService,
+        SearchCriteria,
+    )
+    from backend.services.inventory.sql_ledger import SqlCreditLedger
+
+    tool = "search_live_properties"
+    if conversation_id is None:
+        return {"error": "missing_conversation_id", "tool": tool}
+    if session.get(Conversation, conversation_id) is None:
+        return {"error": "conversation_not_found", "tool": tool,
+                "conversation_id": conversation_id}
+
+    limit = config.LIVE_CREDITS_PER_CONVERSATION
+    if limit == 0:
+        return {
+            "tool": tool, "inventory": "live", "fallback_used": False,
+            "error": "live_search_disabled",
+            "message": "Live listing search is turned off.",
+        }
+    if not _live_configured():
+        return {
+            "tool": tool, "inventory": "live", "fallback_used": False,
+            "error": "live_not_configured",
+            "message": "Live listings are not available right now.",
+        }
+
+    provider = _create_live_provider()
+    service = InventorySearchService(
+        {Inventory.LIVE: provider},
+        ledger=SqlCreditLedger(session),
+        policy=CreditPolicy(limit_per_conversation=limit),
+    )
+    try:
+        outcome = await service.search(
+            Inventory.LIVE,
+            str(conversation_id),
+            SearchCriteria(**criteria),
+            request_id=request_id or uuid.uuid4().hex,
+        )
+    except Exception as exc:  # noqa: BLE001 - never leak provider text to the model
+        # Class name only: exception text and tracebacks are not logged here.
+        logger.error("Live property search failed unexpectedly (%s)", type(exc).__name__)
+        return {
+            "tool": tool, "inventory": "live", "fallback_used": False,
+            "error": "live_search_failed",
+            "failure_kind": FailureKind.PROVIDER_ERROR.value,
+            "message": CUSTOMER_MESSAGES.get(
+                FailureKind.PROVIDER_ERROR, "The live listing service failed."
+            ),
+        }
+    finally:
+        close = getattr(provider, "close", None)
+        if close is not None:
+            await close()
+    return format_live_outcome(outcome, applied_defaults)

@@ -2,8 +2,8 @@
 """Source-aware property inventory (roadmap Phase 5).
 
 Demo (SQLite) and live (API.SH) inventories are separate providers behind one
-interface. They are never merged or substituted for each other here. This
-package is not yet wired into the agent's tools.
+interface. They are never merged or substituted for each other here. The agent
+reaches the live provider only through the search_live_properties tool.
 """
 
 from .apish_provider import ApishPropertyProvider

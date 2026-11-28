@@ -13,9 +13,21 @@ TOOL_DESCRIPTIONS = {
         "availability ('Ready to Move' or 'Under Construction'). "
         "Use this when the customer wants property options."
     ),
+    "search_live_properties": (
+        "Search LIVE 99acres listings (fetched on request through the "
+        "API.SH data service). Use this ONLY when the customer explicitly "
+        "asks for live, current or real 99acres listings or real "
+        "inventory; for every ordinary property search use "
+        "search_properties instead. A location is required. Each call "
+        "uses one credit from a small per-conversation allowance, so never "
+        "call it twice for the same request and never call it "
+        "speculatively. Results are separate from the demo dataset and "
+        "must always be labelled with their source."
+    ),
     "get_property_details": (
         "Retrieve the full details of a specific property using its "
-        "property ID. Use this when the customer asks about a listed property."
+        "property ID. Use this when the customer asks about a listed property "
+        "from the demo dataset. It does not work for live listings."
     ),
     "update_customer_requirements": (
         "Save or update the customer's explicitly stated property "

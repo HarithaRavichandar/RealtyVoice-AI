@@ -13,6 +13,7 @@ from typing import Callable, Optional, Dict
 # Static imports of the request schemas – no dynamic loading.
 from ..tools.schemas import (
     SearchPropertiesRequest,
+    SearchLivePropertiesRequest,
     GetPropertyDetailsRequest,
     UpdateCustomerRequirementsRequest,
     CreateCallbackRequest,
@@ -40,12 +41,17 @@ class ToolInfo:
     implementation: Optional[Callable] = None
 
 # ---------------------------------------------------------------------------
-# Registry definition – exactly four entries as required.
+# Registry definition – one entry per supported tool.
 # ---------------------------------------------------------------------------
 TOOL_REGISTRY: Dict[str, ToolInfo] = {
     "search_properties": ToolInfo(
         name="search_properties",
         input_schema=SearchPropertiesRequest,
+        implementation=None,
+    ),
+    "search_live_properties": ToolInfo(
+        name="search_live_properties",
+        input_schema=SearchLivePropertiesRequest,
         implementation=None,
     ),
     "get_property_details": ToolInfo(

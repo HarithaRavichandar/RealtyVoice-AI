@@ -180,6 +180,54 @@ class SearchPropertiesRequest(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# 1b. SearchLivePropertiesRequest
+# ---------------------------------------------------------------------------
+
+class SearchLivePropertiesRequest(BaseModel):
+    """Parameters accepted by the search_live_properties tool.
+
+    A live search spends one API credit from a small per-conversation
+    allowance, so it needs a location. Only criteria the live service can act
+    on are accepted; there is no availability filter.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    location: str = Field(
+        ...,
+        description="Area or city to search, e.g. 'Whitefield, Bangalore'",
+    )
+    property_type: Optional[str] = Field(default=None)
+    configuration: Optional[str] = Field(
+        default=None, description="Bedroom configuration, e.g. '2 BHK'"
+    )
+    min_budget: Optional[Decimal] = Field(default=None, description="Lower price bound")
+    max_budget: Optional[Decimal] = Field(default=None, description="Upper price bound")
+    possession_before: Optional[date] = Field(
+        default=None, description="Desired possession date"
+    )
+
+    _decimal = field_validator("min_budget", "max_budget", mode="before")(_ensure_decimal)
+    _no_ws_location = field_validator("location", mode="before")(_reject_whitespace)
+    _no_ws_property_type = field_validator("property_type", mode="before")(_reject_whitespace)
+    _no_ws_configuration = field_validator("configuration", mode="before")(_reject_whitespace)
+
+    @model_validator(mode="after")
+    def _budget_checks(self) -> "SearchLivePropertiesRequest":
+        if self.min_budget is not None and self.min_budget < 0:
+            raise ValueError("min_budget must be non-negative")
+        if self.max_budget is not None and self.max_budget < 0:
+            raise ValueError("max_budget must be non-negative")
+        if (
+            self.min_budget is not None
+            and self.max_budget is not None
+            and self.min_budget > self.max_budget
+        ):
+            raise ValueError("min_budget must not exceed max_budget")
+        return self
+
+
+# ---------------------------------------------------------------------------
 # 2. GetPropertyDetailsRequest
 # ---------------------------------------------------------------------------
 
@@ -512,6 +560,7 @@ class NearbyAmenitiesRequest(BaseModel):
 
 __all__ = [
     "SearchPropertiesRequest",
+    "SearchLivePropertiesRequest",
     "GetPropertyDetailsRequest",
     "UpdateCustomerRequirementsRequest",
     "CreateCallbackRequest",

@@ -71,6 +71,13 @@ async def lifespan(app: FastAPI):
         ensure_lead_qualification_columns(engine)
     except Exception:  # never block startup on an optional upgrade
         logger.exception("Lead qualification schema upgrade failed")
+    try:
+        from backend.database import engine
+        from backend.services.schema_upgrades import ensure_live_credit_ledger_table
+
+        ensure_live_credit_ledger_table(engine)
+    except Exception:  # live search simply stays unavailable without the table
+        logger.exception("Live credit ledger table creation failed")
     yield
     logger.info("RealtyVoice AI shutting down")
 
