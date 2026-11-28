@@ -1,0 +1,2647 @@
+{
+ "search_url": "https://www.99acres.com/search/property/buy/bangalore?city=22&locality=368&preference=S&area_unit=1&res_com=R&property_type=1&bedroom_num=2&budget_max=15000000",
+ "purpose": "sale",
+ "location": {
+  "name": "Whitefield, Bangalore",
+  "locality_id": "368",
+  "city_id": "22"
+ },
+ "city": "Bangalore East",
+ "city_id": "22",
+ "localities": [
+  {
+   "id": "8352",
+   "name": "Kadugodi"
+  },
+  {
+   "id": "22913",
+   "name": "Samethanahalli"
+  },
+  {
+   "id": "368",
+   "name": "Whitefield"
+  },
+  {
+   "id": "46027",
+   "name": "Bidare Agraha"
+  },
+  {
+   "id": "1053513",
+   "name": "Soukya Road"
+  },
+  {
+   "id": "6797",
+   "name": "Channasandra"
+  },
+  {
+   "id": "39656",
+   "name": "Nagondanahalli"
+  },
+  {
+   "id": "802892",
+   "name": "Budigere Cross"
+  },
+  {
+   "id": "11830",
+   "name": "Anugondahalli"
+  },
+  {
+   "id": "11720",
+   "name": "Doddakannelli"
+  }
+ ],
+ "page": 1,
+ "total": 1234,
+ "total_pages": 50,
+ "count": 27,
+ "next_page": 2,
+ "applied_filters": {
+  "type": [
+   "apartment"
+  ],
+  "bedrooms": [
+   2
+  ],
+  "budget_min": null,
+  "budget_max": "15000000",
+  "area_min": null,
+  "area_max": null,
+  "furnishing": null,
+  "status": null,
+  "posted_by": null,
+  "verified": null
+ },
+ "heading": "2 BHK Flats in Whitefield, Bangalore for Sale",
+ "results": [
+  {
+   "kind": "property",
+   "id": "94869686",
+   "prop_id": "T94869686",
+   "url": "https://www.99acres.com/2-bhk-bedroom-apartment-flat-for-sale-in-anahata-whitefield-bangalore-east-1178-sqftto-1250-sqft-npspid-T94869686",
+   "title": "2 BHK Flat in Whitefield, Bangalore",
+   "purpose": "sale",
+   "type": "Residential Apartment",
+   "price": 9660000,
+   "price_max": 10200000,
+   "price_text": "96.6 L - 1.02 Cr",
+   "currency": "INR",
+   "price_per_sqft": 8180,
+   "bedrooms": 2,
+   "bathrooms": 0,
+   "balconies": null,
+   "area_text": "1178-1250  sqft",
+   "super_builtup_sqft": null,
+   "builtup_sqft": null,
+   "carpet_sqft": null,
+   "floor": "1",
+   "total_floors": 12,
+   "furnishing": null,
+   "transaction": "new",
+   "ownership": "Freehold",
+   "tags": [
+    "FEATURED",
+    "UNDER CONSTRUCTION",
+    "NEW BOOKING",
+    "POSSESSION IN MAR 2028",
+    "RERA"
+   ],
+   "society": "Anahata",
+   "project_id": "441258",
+   "building_id": "1190357",
+   "locality": "Whitefield, Bangalore",
+   "city": "Bangalore East",
+   "city_id": "22",
+   "latitude": 12.981639971121915,
+   "longitude": 77.79385176739903,
+   "highlights": [
+    "1st out of 12 Floors"
+   ],
+   "amenity_ids": [
+    "2",
+    "29",
+    "4",
+    "36"
+   ],
+   "rera_id": null,
+   "verified": false,
+   "advertiser": {
+    "type": "Builder",
+    "name": "ISHTIKA HOMES",
+    "company": "ISHTIKA HOMES"
+   },
+   "posted": "2026-10-05T18:31:04.000Z",
+   "updated": "2026-10-05T18:31:05.000Z",
+   "expires": "2027-03-05 00:00:00"
+  },
+  {
+   "kind": "property",
+   "id": "93832692",
+   "prop_id": "V93832692",
+   "url": "https://www.99acres.com/2-bhk-bedroom-apartment-flat-for-sale-in-dsr-evoq-whitefield-bangalore-east-1226-sqft-npspid-V93832692",
+   "title": "2 BHK Flat in Whitefield, Bangalore",
+   "purpose": "sale",
+   "type": "Residential Apartment",
+   "price": 14600000,
+   "price_max": 14600000,
+   "price_text": "1.46 Cr",
+   "currency": "INR",
+   "price_per_sqft": 11908,
+   "bedrooms": 2,
+   "bathrooms": 0,
+   "balconies": null,
+   "area_text": "1226 sqft",
+   "super_builtup_sqft": 1226,
+   "builtup_sqft": null,
+   "carpet_sqft": null,
+   "floor": "1",
+   "total_floors": 30,
+   "furnishing": null,
+   "transaction": "new",
+   "ownership": "Freehold",
+   "tags": [
+    "FEATURED",
+    "UNDER CONSTRUCTION",
+    "NEW LAUNCH",
+    "NEW BOOKING",
+    "POSSESSION IN DEC 2029",
+    "RERA"
+   ],
+   "society": "DSR Evoq",
+   "project_id": "455015",
+   "building_id": "1234081",
+   "locality": "Whitefield, Bangalore",
+   "city": "Bangalore East",
+   "city_id": "22",
+   "latitude": 12.987933,
+   "longitude": 77.762628,
+   "highlights": [
+    "1st out of 30 Floors"
+   ],
+   "amenity_ids": [
+    "2",
+    "13",
+    "4",
+    "36",
+    "35"
+   ],
+   "rera_id": null,
+   "verified": false,
+   "advertiser": {
+    "type": "Builder",
+    "name": "Shivika Rathore",
+    "company": "DSR GROUP"
+   },
+   "posted": "2026-08-26T05:06:41.000Z",
+   "updated": "2026-09-24T07:31:31.000Z",
+   "expires": "2027-02-22 00:00:00"
+  },
+  {
+   "kind": "project",
+   "id": "9414",
+   "name": "Ramky Fortuna",
+   "url": "https://www.99acres.com/ramky-fortuna-whitefield-bangalore-east-npxid-r9414",
+   "developer": "Ramky Estates",
+   "price_text": {
+    "min": 8800000,
+    "max": 43153846,
+    "authentic": true,
+    "label": "88 L - 4.32 Cr"
+   },
+   "price_per_sqft": "13,342 /sqft",
+   "possession": "Under Construction (Completion in Mar, 2027)",
+   "configurations": {
+    "cards": [
+     {
+      "area": {
+       "unit": 1,
+       "min": 1011,
+       "max": 1268,
+       "secondaryUnit": 3,
+       "display": "1,011 - 1,268 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "93.92 - 117.8 sqm"
+      },
+      "price": {
+       "min": 13500000,
+       "max": 17882051,
+       "authentic": true,
+       "label": "1.35 - 1.79 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "2 BHK"
+      }
+     },
+     {
+      "area": {
+       "unit": 1,
+       "min": 624,
+       "max": 624,
+       "secondaryUnit": 3,
+       "display": "624 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "57.97 sqm"
+      },
+      "price": {
+       "min": 8800000,
+       "max": 8800000,
+       "authentic": true,
+       "label": "88 L"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "1 BHK"
+      }
+     },
+     {
+      "area": {
+       "unit": 1,
+       "min": 1484,
+       "max": 1991,
+       "secondaryUnit": 3,
+       "display": "1,484 - 1,991 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "137.87 - 184.97 sqm"
+      },
+      "price": {
+       "min": 19800000,
+       "max": 28078205,
+       "authentic": true,
+       "label": "1.98 - 2.81 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "3 BHK"
+      }
+     },
+     {
+      "area": {
+       "unit": 1,
+       "min": 2422,
+       "max": 3060,
+       "secondaryUnit": 3,
+       "display": "2,422 - 3,060 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "225.01 - 284.28 sqm"
+      },
+      "price": {
+       "min": 34156410,
+       "max": 43153846,
+       "authentic": true,
+       "label": "3.42 - 4.32 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "4 BHK"
+      }
+     }
+    ]
+   },
+   "location": "Whitefield",
+   "tags": [
+    "No Brokerage",
+    "3D Floor Plans Available",
+    "+50 Top Facilities"
+   ]
+  },
+  {
+   "kind": "project",
+   "id": "458826",
+   "name": "Sanjeevini Heliconia",
+   "url": "https://www.99acres.com/sanjeevini-heliconia-soukya-road-bangalore-east-npxid-r458826",
+   "developer": "Sanjeevini Group",
+   "price_text": {
+    "min": 9900000,
+    "max": 14958190,
+    "authentic": true,
+    "label": "99 L - 1.5 Cr"
+   },
+   "price_per_sqft": "8,426 /sqft",
+   "possession": "New Launch (Completion in Dec, 2028)",
+   "configurations": {
+    "cards": [
+     {
+      "area": {
+       "unit": 1,
+       "min": 1175,
+       "max": 1175,
+       "secondaryUnit": 3,
+       "display": "1,175 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "109.16 sqm"
+      },
+      "price": {
+       "min": 9900000,
+       "max": 9900000,
+       "authentic": true,
+       "label": "99 L"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "2 BHK"
+      }
+     },
+     {
+      "area": {
+       "unit": 1,
+       "min": 1410,
+       "max": 1690,
+       "secondaryUnit": 3,
+       "display": "1,410 - 1,690 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "130.99 - 157.01 sqm"
+      },
+      "price": {
+       "min": 12479910,
+       "max": 14958190,
+       "authentic": true,
+       "label": "1.25 - 1.5 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "3 BHK"
+      }
+     }
+    ]
+   },
+   "location": "Soukya Road",
+   "tags": [
+    "No Brokerage",
+    "3D Floor Plans Available",
+    "+50 Top Facilities"
+   ]
+  },
+  {
+   "kind": "project",
+   "id": "440257",
+   "name": "Jagadhabi Premier 1 ",
+   "url": "https://www.99acres.com/jagadhabi-premier-1-whitefield-bangalore-east-npxid-r440257",
+   "developer": "Jagadhabi Constructions",
+   "price_text": {
+    "min": 9750000,
+    "max": 16331250,
+    "authentic": true,
+    "label": "97.5 L - 1.63 Cr"
+   },
+   "price_per_sqft": "9,750 /sqft",
+   "possession": "Under Construction (Completion in Aug, 2027)",
+   "configurations": {
+    "cards": [
+     {
+      "area": {
+       "unit": 1,
+       "min": 1000,
+       "max": 1445,
+       "secondaryUnit": 3,
+       "display": "1,000 - 1,445 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "92.9 - 134.24 sqm"
+      },
+      "price": {
+       "min": 9750000,
+       "max": 14088750,
+       "authentic": true,
+       "label": "97.5 L - 1.41 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "2 BHK"
+      }
+     },
+     {
+      "area": {
+       "unit": 1,
+       "min": 1430,
+       "max": 1675,
+       "secondaryUnit": 3,
+       "display": "1,430 - 1,675 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "132.85 - 155.61 sqm"
+      },
+      "price": {
+       "min": 13942500,
+       "max": 16331250,
+       "authentic": true,
+       "label": "1.39 - 1.63 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "3 BHK"
+      }
+     }
+    ]
+   },
+   "location": "Whitefield",
+   "tags": [
+    "No Brokerage",
+    "3D Floor Plans Available",
+    "+10 Top Facilities"
+   ]
+  },
+  {
+   "kind": "project",
+   "id": "456212",
+   "name": "Ankuraa Pristine Park",
+   "url": "https://www.99acres.com/ankuraa-pristine-park-whitefield-bangalore-east-npxid-r456212",
+   "developer": "Ankuraa Group",
+   "price_text": {
+    "min": 15300000,
+    "max": 28300000,
+    "authentic": true,
+    "label": "1.53 - 2.83 Cr"
+   },
+   "price_per_sqft": "11,583 /sqft",
+   "possession": "Under Construction (Completion in Dec, 2028)",
+   "configurations": {
+    "cards": [
+     {
+      "area": {
+       "unit": 1,
+       "min": 1288,
+       "max": 1288,
+       "secondaryUnit": 3,
+       "display": "1,288 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "119.66 sqm"
+      },
+      "price": {
+       "min": 15300000,
+       "max": 15300000,
+       "authentic": true,
+       "label": "1.53 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "2 BHK"
+      }
+     },
+     {
+      "area": {
+       "unit": 1,
+       "min": 1565,
+       "max": 1891,
+       "secondaryUnit": 3,
+       "display": "1,565 - 1,891 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "145.39 - 175.68 sqm"
+      },
+      "price": {
+       "min": 18590450,
+       "max": 22000000,
+       "authentic": true,
+       "label": "1.86 - 2.2 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "3 BHK"
+      }
+     },
+     {
+      "area": {
+       "unit": 1,
+       "min": 2426,
+       "max": 2439,
+       "secondaryUnit": 3,
+       "display": "2,426 - 2,439 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "225.38 - 226.59 sqm"
+      },
+      "price": {
+       "min": 28100000,
+       "max": 28300000,
+       "authentic": true,
+       "label": "2.81 - 2.83 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "4 BHK"
+      }
+     }
+    ]
+   },
+   "location": "Whitefield",
+   "tags": [
+    "No Brokerage",
+    "3D Floor Plans Available",
+    "+30 Top Facilities"
+   ]
+  },
+  {
+   "kind": "project",
+   "id": "437301",
+   "name": "Sakura Blossom",
+   "url": "https://www.99acres.com/sakura-blossom-budigere-cross-bangalore-east-npxid-r437301",
+   "developer": "Sri Sai Chaitanya",
+   "price_text": {
+    "min": 10900003,
+    "max": 11697992,
+    "authentic": true,
+    "label": "1.09 - 1.17 Cr"
+   },
+   "price_per_sqft": "8,769 /sqft",
+   "possession": "Under Construction (Completion in Dec, 2026)",
+   "configurations": {
+    "cards": [
+     {
+      "area": {
+       "unit": 1,
+       "min": 1243,
+       "max": 1334,
+       "secondaryUnit": 3,
+       "display": "1,243 - 1,334 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "115.48 - 123.93 sqm"
+      },
+      "price": {
+       "min": 10900003,
+       "max": 11697992,
+       "authentic": true,
+       "label": "1.09 - 1.17 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "2 BHK"
+      }
+     }
+    ]
+   },
+   "location": "Budigere Cross",
+   "tags": [
+    "No Brokerage",
+    "3D Floor Plans Available",
+    "+50 Top Facilities"
+   ]
+  },
+  {
+   "kind": "project",
+   "id": "467742",
+   "name": "Legend Lemon Tree",
+   "url": "https://www.99acres.com/legend-lemon-tree-whitefield-bangalore-east-npxid-r467742",
+   "developer": "Legend Properties",
+   "price_text": {
+    "min": 15565000,
+    "max": 21725000,
+    "authentic": true,
+    "label": "1.56 - 2.17 Cr"
+   },
+   "price_per_sqft": "11,000 /sqft",
+   "possession": "New Launch (Completion in Dec, 2030)",
+   "configurations": {
+    "cards": [
+     {
+      "area": {
+       "unit": 1,
+       "min": 1415,
+       "max": 1470,
+       "secondaryUnit": 3,
+       "display": "1,415 - 1,470 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "131.46 - 136.57 sqm"
+      },
+      "price": {
+       "min": 15565000,
+       "max": 16170000,
+       "authentic": true,
+       "label": "1.56 - 1.62 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "2 BHK"
+      }
+     },
+     {
+      "area": {
+       "unit": 1,
+       "min": 1600,
+       "max": 1975,
+       "secondaryUnit": 3,
+       "display": "1,600 - 1,975 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "148.64 - 183.48 sqm"
+      },
+      "price": {
+       "min": 17600000,
+       "max": 21725000,
+       "authentic": true,
+       "label": "1.76 - 2.17 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "3 BHK"
+      }
+     }
+    ]
+   },
+   "location": "Whitefield",
+   "tags": [
+    "No Brokerage",
+    "3D Floor Plans Available",
+    "+20 Top Facilities"
+   ]
+  },
+  {
+   "kind": "project",
+   "id": "454238",
+   "name": "Eeshanya Aaroha",
+   "url": "https://www.99acres.com/eeshanya-aaroha-soukya-road-bangalore-east-npxid-r454238",
+   "developer": "Eeshanya Infra LLP",
+   "price_text": {
+    "min": 9356000,
+    "max": 14721295,
+    "authentic": true,
+    "label": "93.56 L - 1.47 Cr"
+   },
+   "price_per_sqft": "8,868 /sqft",
+   "possession": "Under Construction (Completion in Jun, 2027)",
+   "configurations": {
+    "cards": [
+     {
+      "area": {
+       "unit": 1,
+       "min": 1055,
+       "max": 1055,
+       "secondaryUnit": 3,
+       "display": "1,055 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "98.01 sqm"
+      },
+      "price": {
+       "min": 9356000,
+       "max": 9356000,
+       "authentic": true,
+       "label": "93.56 L"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "2 BHK"
+      }
+     },
+     {
+      "area": {
+       "unit": 1,
+       "min": 1355,
+       "max": 1660,
+       "secondaryUnit": 3,
+       "display": "1,355 - 1,660 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "125.88 - 154.22 sqm"
+      },
+      "price": {
+       "min": 12016478,
+       "max": 14721295,
+       "authentic": true,
+       "label": "1.2 - 1.47 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "3 BHK"
+      }
+     }
+    ]
+   },
+   "location": "Soukya Road",
+   "tags": [
+    "No Brokerage",
+    "3D Floor Plans Available",
+    "+30 Top Facilities"
+   ]
+  },
+  {
+   "kind": "project",
+   "id": "475754",
+   "name": " Brigade Autograph",
+   "url": "https://www.99acres.com/brigade-autograph-kadugodi-bangalore-east-npxid-r475754",
+   "developer": "Brigade Group",
+   "price_text": {
+    "min": 10448508,
+    "max": 22050000,
+    "authentic": true,
+    "label": "1.04 - 2.21 Cr"
+   },
+   "price_per_sqft": "15,000 /sqft",
+   "possession": "New Launch (Completion in Jun, 2032)",
+   "configurations": {
+    "cards": [
+     {
+      "area": {
+       "unit": 1,
+       "min": 1220,
+       "max": 1220,
+       "secondaryUnit": 3,
+       "display": "1,220 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "113.34 sqm"
+      },
+      "price": {
+       "min": 18300000,
+       "max": 18300000,
+       "authentic": true,
+       "label": "1.83 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "2 BHK"
+      }
+     },
+     {
+      "area": {
+       "unit": 1,
+       "min": 692,
+       "max": 692,
+       "secondaryUnit": 3,
+       "display": "692 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "64.29 sqm"
+      },
+      "price": {
+       "min": 10448508,
+       "max": 10448508,
+       "authentic": true,
+       "label": "1.04 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "1 BHK"
+      }
+     },
+     {
+      "area": {
+       "unit": 1,
+       "min": 1471,
+       "max": 1471,
+       "secondaryUnit": 3,
+       "display": "1,471 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "136.66 sqm"
+      },
+      "price": {
+       "min": 22050000,
+       "max": 22050000,
+       "authentic": true,
+       "label": "2.21 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "3 BHK"
+      }
+     }
+    ]
+   },
+   "location": "Kadugodi",
+   "tags": [
+    "No Brokerage",
+    "3D Floor Plans Available",
+    "+10 Top Facilities"
+   ]
+  },
+  {
+   "kind": "project",
+   "id": "455015",
+   "name": "DSR Evoq",
+   "url": "https://www.99acres.com/dsr-evoq-whitefield-bangalore-east-npxid-r455015",
+   "developer": "DSR Group Bangalore",
+   "price_text": {
+    "min": 14600000,
+    "max": 24082361,
+    "authentic": true,
+    "label": "1.46 - 2.41 Cr"
+   },
+   "price_per_sqft": "10,196 /sqft",
+   "possession": "New Launch (Completion in Dec, 2029)",
+   "configurations": {
+    "cards": [
+     {
+      "area": {
+       "unit": 1,
+       "min": 1226,
+       "max": 1226,
+       "secondaryUnit": 3,
+       "display": "1,226 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "113.9 sqm"
+      },
+      "price": {
+       "min": 14600000,
+       "max": 14600000,
+       "authentic": true,
+       "label": "1.46 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "2 BHK"
+      }
+     },
+     {
+      "area": {
+       "unit": 1,
+       "min": 1560,
+       "max": 1978,
+       "secondaryUnit": 3,
+       "display": "1,560 - 1,978 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "144.93 - 183.76 sqm"
+      },
+      "price": {
+       "min": 18577494,
+       "max": 23555309,
+       "authentic": true,
+       "label": "1.86 - 2.36 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "3 BHK"
+      }
+     },
+     {
+      "area": {
+       "unit": 1,
+       "min": 2362,
+       "max": 2362,
+       "secondaryUnit": 3,
+       "display": "2,362 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "219.44 sqm"
+      },
+      "price": {
+       "min": 24082361,
+       "max": 24082361,
+       "authentic": true,
+       "label": "2.41 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "4 BHK"
+      }
+     }
+    ]
+   },
+   "location": "Whitefield",
+   "tags": [
+    "No Brokerage",
+    "3D Floor Plans Available",
+    "+50 Top Facilities"
+   ]
+  },
+  {
+   "kind": "project",
+   "id": "432522",
+   "name": "Sattva Songbird",
+   "url": "https://www.99acres.com/sattva-songbird-budigere-cross-bangalore-east-npxid-r432522",
+   "developer": "Sattva Group",
+   "price_text": {
+    "min": 11000000,
+    "max": 44641800,
+    "authentic": true,
+    "label": "1.1 - 4.46 Cr"
+   },
+   "price_per_sqft": "11,021 /sqft",
+   "possession": "Under Construction (Completion from May, 2029 onwards)",
+   "configurations": {
+    "cards": [
+     {
+      "area": {
+       "unit": 1,
+       "min": 1280,
+       "max": 1398,
+       "secondaryUnit": 3,
+       "display": "1,280 - 1,398 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "118.92 - 129.88 sqm"
+      },
+      "price": {
+       "min": 14224000,
+       "max": 20422310,
+       "authentic": true,
+       "label": "1.42 - 2.04 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "2 BHK"
+      }
+     },
+     {
+      "area": {
+       "unit": 1,
+       "min": 753,
+       "max": 756,
+       "secondaryUnit": 3,
+       "display": "753 - 756 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "69.96 - 70.23 sqm"
+      },
+      "price": {
+       "min": 11000000,
+       "max": 11043821,
+       "authentic": true,
+       "label": "1.1 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "1 BHK"
+      }
+     },
+     {
+      "area": {
+       "unit": 1,
+       "min": 1564,
+       "max": 1813,
+       "secondaryUnit": 3,
+       "display": "1,564 - 1,813 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "145.3 - 168.43 sqm"
+      },
+      "price": {
+       "min": 17391200,
+       "max": 19980400,
+       "authentic": true,
+       "label": "1.74 - 2 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "3 BHK"
+      }
+     },
+     {
+      "area": {
+       "unit": 1,
+       "min": 3336,
+       "max": 3543,
+       "secondaryUnit": 3,
+       "display": "3,336 - 3,543 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "309.92 - 329.16 sqm"
+      },
+      "price": {
+       "min": 42033600,
+       "max": 44641800,
+       "authentic": true,
+       "label": "4.2 - 4.46 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Villa",
+       "bgColor": null,
+       "icon": null,
+       "label": "4 BHK"
+      }
+     }
+    ]
+   },
+   "location": "Budigere Cross",
+   "tags": [
+    "No Brokerage",
+    "3D Floor Plans Available",
+    "+40 Top Facilities"
+   ]
+  },
+  {
+   "kind": "project",
+   "id": "469194",
+   "name": "Dwarakamai Zenith Heights",
+   "url": "https://www.99acres.com/dwarakamai-zenith-heights-whitefield-bangalore-east-npxid-r469194",
+   "developer": "Dwarakamai Builders",
+   "price_text": {
+    "min": 12548777,
+    "max": 17198310,
+    "authentic": true,
+    "label": "1.25 - 1.72 Cr"
+   },
+   "price_per_sqft": "10,177 /sqft",
+   "possession": "New Launch (Completion in Dec, 2028)",
+   "configurations": {
+    "cards": [
+     {
+      "area": {
+       "unit": 1,
+       "min": 1225,
+       "max": 1250,
+       "secondaryUnit": 3,
+       "display": "1,225 - 1,250 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "113.81 - 116.13 sqm"
+      },
+      "price": {
+       "min": 12548777,
+       "max": 12798750,
+       "authentic": true,
+       "label": "1.25 - 1.28 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "2 BHK"
+      }
+     },
+     {
+      "area": {
+       "unit": 1,
+       "min": 1515,
+       "max": 1690,
+       "secondaryUnit": 3,
+       "display": "1,515 - 1,690 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "140.75 - 157.01 sqm"
+      },
+      "price": {
+       "min": 15448485,
+       "max": 17198310,
+       "authentic": true,
+       "label": "1.54 - 1.72 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "3 BHK"
+      }
+     }
+    ]
+   },
+   "location": "Whitefield",
+   "tags": [
+    "No Brokerage",
+    "3D Floor Plans Available",
+    "+50 Top Facilities"
+   ]
+  },
+  {
+   "kind": "project",
+   "id": "441258",
+   "name": "Anahata",
+   "url": "https://www.99acres.com/anahata-whitefield-bangalore-east-npxid-r441258",
+   "developer": "Ishtika Vibranium",
+   "price_text": {
+    "min": 9660000,
+    "max": 14400000,
+    "authentic": true,
+    "label": "96.6 L - 1.44 Cr"
+   },
+   "price_per_sqft": "8,160 /sqft",
+   "possession": "Under Construction (Completion in Mar, 2028)",
+   "configurations": {
+    "cards": [
+     {
+      "area": {
+       "unit": 1,
+       "min": 1178,
+       "max": 1250,
+       "secondaryUnit": 3,
+       "display": "1,178 - 1,250 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "109.44 - 116.13 sqm"
+      },
+      "price": {
+       "min": 9660000,
+       "max": 10200000,
+       "authentic": true,
+       "label": "96.6 L - 1.02 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "2 BHK"
+      }
+     },
+     {
+      "area": {
+       "unit": 1,
+       "min": 1500,
+       "max": 1750,
+       "secondaryUnit": 3,
+       "display": "1,500 - 1,750 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "139.35 - 162.58 sqm"
+      },
+      "price": {
+       "min": 12300000,
+       "max": 14400000,
+       "authentic": true,
+       "label": "1.23 - 1.44 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "3 BHK"
+      }
+     }
+    ]
+   },
+   "location": "Whitefield",
+   "tags": [
+    "No Brokerage",
+    "3D Floor Plans Available",
+    "+30 Top Facilities"
+   ]
+  },
+  {
+   "kind": "project",
+   "id": "472995",
+   "name": "Whitestone Twinkles",
+   "url": "https://www.99acres.com/whitestone-twinkles-whitefield-bangalore-east-npxid-r472995",
+   "developer": "Whitestone Projects",
+   "price_text": {
+    "min": 12000001,
+    "max": 17007876,
+    "authentic": true,
+    "label": "1.2 - 1.7 Cr"
+   },
+   "price_per_sqft": "9,449 /sqft",
+   "possession": "New Launch (Completion in Dec, 2029)",
+   "configurations": {
+    "cards": [
+     {
+      "area": {
+       "unit": 1,
+       "min": 1270,
+       "max": 1340,
+       "secondaryUnit": 3,
+       "display": "1,270 - 1,340 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "117.99 - 124.49 sqm"
+      },
+      "price": {
+       "min": 12000001,
+       "max": 12661418,
+       "authentic": true,
+       "label": "1.2 - 1.27 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "2 BHK"
+      }
+     },
+     {
+      "area": {
+       "unit": 1,
+       "min": 1740,
+       "max": 1800,
+       "secondaryUnit": 3,
+       "display": "1,740 - 1,800 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "161.65 - 167.23 sqm"
+      },
+      "price": {
+       "min": 16440946,
+       "max": 17007876,
+       "authentic": true,
+       "label": "1.64 - 1.7 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "3 BHK"
+      }
+     }
+    ]
+   },
+   "location": "Whitefield",
+   "tags": [
+    "No Brokerage",
+    "3D Floor Plans Available",
+    "+10 Top Facilities"
+   ]
+  },
+  {
+   "kind": "project",
+   "id": "412178",
+   "name": "Platinum East Woods",
+   "url": "https://www.99acres.com/platinum-east-woods-whitefield-bangalore-east-npxid-r412178",
+   "developer": "Platinum Narya Infra",
+   "price_text": {
+    "min": 11873000,
+    "max": 24771500,
+    "authentic": true,
+    "label": "1.19 - 2.48 Cr"
+   },
+   "price_per_sqft": "9,530 /sqft",
+   "possession": "Ready To Move (Since Dec, 2025)",
+   "configurations": {
+    "cards": [
+     {
+      "area": {
+       "unit": 1,
+       "min": 1216,
+       "max": 1364,
+       "secondaryUnit": 3,
+       "display": "1,216 - 1,364 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "112.97 - 126.72 sqm"
+      },
+      "price": {
+       "min": 11873000,
+       "max": 13242000,
+       "authentic": true,
+       "label": "1.19 - 1.32 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "2 BHK"
+      }
+     },
+     {
+      "area": {
+       "unit": 1,
+       "min": 1422,
+       "max": 2175,
+       "secondaryUnit": 3,
+       "display": "1,422 - 2,175 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "132.11 - 202.06 sqm"
+      },
+      "price": {
+       "min": 13778500,
+       "max": 20743750,
+       "authentic": true,
+       "label": "1.38 - 2.07 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "3 BHK"
+      }
+     },
+     {
+      "area": {
+       "unit": 1,
+       "min": 2230,
+       "max": 2578,
+       "secondaryUnit": 3,
+       "display": "2,230 - 2,578 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "207.17 - 239.5 sqm"
+      },
+      "price": {
+       "min": 21252500,
+       "max": 24771500,
+       "authentic": true,
+       "label": "2.13 - 2.48 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "4 BHK"
+      }
+     }
+    ]
+   },
+   "location": "Whitefield",
+   "tags": [
+    "No Brokerage",
+    "3D Floor Plans Available",
+    "+30 Top Facilities"
+   ]
+  },
+  {
+   "kind": "project",
+   "id": "410449",
+   "name": "Prestige Park Grove",
+   "url": "https://www.99acres.com/prestige-park-grove-whitefield-bangalore-east-npxid-r410449",
+   "developer": "Prestige Group",
+   "price_text": {
+    "min": 9869999,
+    "max": 62600623,
+    "authentic": true,
+    "label": "98.7 L - 6.26 Cr"
+   },
+   "price_per_sqft": "12,400 /sqft",
+   "possession": "Under Construction (Completion in Dec, 2027)",
+   "configurations": {
+    "cards": [
+     {
+      "area": {
+       "unit": 1,
+       "min": 1067,
+       "max": 1150,
+       "secondaryUnit": 3,
+       "display": "1,067 - 1,150 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "99.13 - 106.84 sqm"
+      },
+      "price": {
+       "min": 15471501,
+       "max": 17527024,
+       "authentic": true,
+       "label": "1.55 - 1.75 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "2 BHK"
+      }
+     },
+     {
+      "area": {
+       "unit": 1,
+       "min": 658,
+       "max": 674,
+       "secondaryUnit": 3,
+       "display": "658 - 674 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "61.13 - 62.62 sqm"
+      },
+      "price": {
+       "min": 9869999,
+       "max": 10157475,
+       "authentic": true,
+       "label": "98.7 L - 1.02 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "1 BHK"
+      }
+     },
+     {
+      "area": {
+       "unit": 1,
+       "min": 1414,
+       "max": 2204,
+       "secondaryUnit": 3,
+       "display": "1,414 - 2,204 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "131.36 - 204.76 sqm"
+      },
+      "price": {
+       "min": 18564000,
+       "max": 33512080,
+       "authentic": true,
+       "label": "1.86 - 3.35 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "3 BHK"
+      }
+     },
+     {
+      "area": {
+       "unit": 1,
+       "min": 2369,
+       "max": 3856,
+       "secondaryUnit": 3,
+       "display": "2,369 - 3,856 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "220.09 - 358.23 sqm"
+      },
+      "price": {
+       "min": 35535000,
+       "max": 57840000,
+       "authentic": true,
+       "label": "3.55 - 5.78 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "4 BHK"
+      }
+     },
+     {
+      "area": {
+       "unit": 1,
+       "min": 3463,
+       "max": 4170,
+       "secondaryUnit": 3,
+       "display": "3,463 - 4,170 sqft",
+       "type": {
+        "label": "Built-up Area",
+        "value": "BUILTUP"
+       },
+       "secondaryDisplay": "321.72 - 387.41 sqm"
+      },
+      "price": {
+       "min": 51987040,
+       "max": 62600623,
+       "authentic": true,
+       "label": "5.2 - 6.26 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Duplex",
+       "bgColor": null,
+       "icon": null,
+       "label": "4 BHK"
+      }
+     }
+    ]
+   },
+   "location": "Whitefield",
+   "tags": [
+    "No Brokerage",
+    "3D Floor Plans Available",
+    "+40 Top Facilities"
+   ]
+  },
+  {
+   "kind": "project",
+   "id": "462923",
+   "name": "Evergreen at Prestige Raintree Park",
+   "url": "https://www.99acres.com/evergreen-at-prestige-raintree-park-whitefield-bangalore-east-npxid-r462923",
+   "developer": "Prestige Group",
+   "price_text": {
+    "min": 15999999,
+    "max": 33971412,
+    "authentic": true,
+    "label": "1.6 - 3.4 Cr"
+   },
+   "price_per_sqft": "13,500 /sqft",
+   "possession": "New Launch (Completion in Jun, 2030)",
+   "configurations": {
+    "cards": [
+     {
+      "area": {
+       "unit": 1,
+       "min": 1174,
+       "max": 1526,
+       "secondaryUnit": 3,
+       "display": "1,174 - 1,526 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "109.07 - 141.77 sqm"
+      },
+      "price": {
+       "min": 15999999,
+       "max": 20797274,
+       "authentic": true,
+       "label": "1.6 - 2.08 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "2 BHK"
+      }
+     },
+     {
+      "area": {
+       "unit": 1,
+       "min": 1461,
+       "max": 2037,
+       "secondaryUnit": 3,
+       "display": "1,461 - 2,037 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "135.73 - 189.24 sqm"
+      },
+      "price": {
+       "min": 20099999,
+       "max": 28024434,
+       "authentic": true,
+       "label": "2.01 - 2.8 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "3 BHK"
+      }
+     },
+     {
+      "area": {
+       "unit": 1,
+       "min": 2271,
+       "max": 2513,
+       "secondaryUnit": 3,
+       "display": "2,271 - 2,513 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "210.98 - 233.47 sqm"
+      },
+      "price": {
+       "min": 30699991,
+       "max": 33971412,
+       "authentic": true,
+       "label": "3.07 - 3.4 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "4 BHK"
+      }
+     }
+    ]
+   },
+   "location": "Whitefield",
+   "tags": [
+    "No Brokerage",
+    "3D Floor Plans Available",
+    "+30 Top Facilities"
+   ]
+  },
+  {
+   "kind": "project",
+   "id": "461901",
+   "name": "Brigade Belvedere",
+   "url": "https://www.99acres.com/brigade-belvedere-budigere-cross-bangalore-east-npxid-r461901",
+   "developer": "Brigade Group",
+   "price_text": {
+    "min": 9295000,
+    "max": 26169000,
+    "authentic": true,
+    "label": "92.95 L - 2.62 Cr"
+   },
+   "price_per_sqft": "13,000 /sqft",
+   "possession": "Under Construction (Completion in Mar, 2031)",
+   "configurations": {
+    "cards": [
+     {
+      "area": {
+       "unit": 1,
+       "min": 1110,
+       "max": 1149,
+       "secondaryUnit": 3,
+       "display": "1,110 - 1,149 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "103.12 - 106.75 sqm"
+      },
+      "price": {
+       "min": 14430000,
+       "max": 14937000,
+       "authentic": true,
+       "label": "1.44 - 1.49 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "2 BHK"
+      }
+     },
+     {
+      "area": {
+       "unit": 1,
+       "min": 715,
+       "max": 715,
+       "secondaryUnit": 3,
+       "display": "715 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "66.43 sqm"
+      },
+      "price": {
+       "min": 9295000,
+       "max": 9295000,
+       "authentic": true,
+       "label": "92.95 L"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "1 BHK"
+      }
+     },
+     {
+      "area": {
+       "unit": 1,
+       "min": 1443,
+       "max": 2013,
+       "secondaryUnit": 3,
+       "display": "1,443 - 2,013 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "134.06 - 187.01 sqm"
+      },
+      "price": {
+       "min": 18759000,
+       "max": 26169000,
+       "authentic": true,
+       "label": "1.88 - 2.62 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "3 BHK"
+      }
+     }
+    ]
+   },
+   "location": "Budigere Cross",
+   "tags": [
+    "No Brokerage",
+    "3D Floor Plans Available",
+    "+30 Top Facilities"
+   ]
+  },
+  {
+   "kind": "project",
+   "id": "430075",
+   "name": "Prestige Raintree Park",
+   "url": "https://www.99acres.com/prestige-raintree-park-whitefield-bangalore-east-npxid-r430075",
+   "developer": "Prestige Group",
+   "price_text": {
+    "min": 21000000,
+    "max": 66148211,
+    "authentic": true,
+    "label": "2.1 - 6.61 Cr"
+   },
+   "price_per_sqft": "17,900 /sqft",
+   "possession": "Under Construction (Completion in Dec, 2028)",
+   "configurations": {
+    "cards": [
+     {
+      "area": {
+       "unit": 1,
+       "min": 1174,
+       "max": 1526,
+       "secondaryUnit": 3,
+       "display": "1,174 - 1,526 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "109.07 - 141.77 sqm"
+      },
+      "price": {
+       "min": 21000000,
+       "max": 27296422,
+       "authentic": true,
+       "label": "2.1 - 2.73 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "2 BHK"
+      }
+     },
+     {
+      "area": {
+       "unit": 1,
+       "min": 1461,
+       "max": 2414,
+       "secondaryUnit": 3,
+       "display": "1,461 - 2,414 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "135.73 - 224.27 sqm"
+      },
+      "price": {
+       "min": 26133730,
+       "max": 43180579,
+       "authentic": true,
+       "label": "2.61 - 4.32 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "3 BHK"
+      }
+     },
+     {
+      "area": {
+       "unit": 1,
+       "min": 2226,
+       "max": 2968,
+       "secondaryUnit": 3,
+       "display": "2,226 - 2,968 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "206.8 - 275.74 sqm"
+      },
+      "price": {
+       "min": 39817717,
+       "max": 53090289,
+       "authentic": true,
+       "label": "3.98 - 5.31 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "4 BHK"
+      }
+     },
+     {
+      "area": {
+       "unit": 1,
+       "min": 3503,
+       "max": 3698,
+       "secondaryUnit": 3,
+       "display": "3,503 - 3,698 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "325.44 - 343.56 sqm"
+      },
+      "price": {
+       "min": 62660136,
+       "max": 66148211,
+       "authentic": true,
+       "label": "6.27 - 6.61 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "5 BHK"
+      }
+     }
+    ]
+   },
+   "location": "Whitefield",
+   "tags": [
+    "No Brokerage",
+    "3D Floor Plans Available",
+    "+50 Top Facilities"
+   ]
+  },
+  {
+   "kind": "project",
+   "id": "422150",
+   "name": "Godrej Woodscapes",
+   "url": "https://www.99acres.com/godrej-woodscapes-budigere-cross-bangalore-east-npxid-r422150",
+   "developer": "Godrej Properties",
+   "price_text": {
+    "min": 16685060,
+    "max": 50885660,
+    "authentic": true,
+    "label": "1.67 - 5.09 Cr"
+   },
+   "price_per_sqft": "14,000 /sqft",
+   "possession": "Under Construction (Completion in Jan, 2029)",
+   "configurations": {
+    "cards": [
+     {
+      "area": {
+       "unit": 1,
+       "min": 1192,
+       "max": 1282,
+       "secondaryUnit": 3,
+       "display": "1,192 - 1,282 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "110.74 - 119.1 sqm"
+      },
+      "price": {
+       "min": 16685060,
+       "max": 17950940,
+       "authentic": true,
+       "label": "1.67 - 1.8 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "2 BHK"
+      }
+     },
+     {
+      "area": {
+       "unit": 1,
+       "min": 1429,
+       "max": 2436,
+       "secondaryUnit": 3,
+       "display": "1,429 - 2,436 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "132.76 - 226.31 sqm"
+      },
+      "price": {
+       "min": 20012440,
+       "max": 34097980,
+       "authentic": true,
+       "label": "2 - 3.41 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "3 BHK"
+      }
+     },
+     {
+      "area": {
+       "unit": 1,
+       "min": 3012,
+       "max": 3635,
+       "secondaryUnit": 3,
+       "display": "3,012 - 3,635 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "279.82 - 337.7 sqm"
+      },
+      "price": {
+       "min": 42170800,
+       "max": 50885660,
+       "authentic": true,
+       "label": "4.22 - 5.09 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "4 BHK"
+      }
+     }
+    ]
+   },
+   "location": "Budigere Cross",
+   "tags": [
+    "No Brokerage",
+    "3D Floor Plans Available",
+    "+20 Top Facilities"
+   ]
+  },
+  {
+   "kind": "project",
+   "id": "397983",
+   "name": "Pavani Mirabilia",
+   "url": "https://www.99acres.com/pavani-mirabilia-whitefield-bangalore-east-npxid-r397983",
+   "developer": "Pavani Group",
+   "price_text": {
+    "min": 14161450,
+    "max": 32587600,
+    "authentic": true,
+    "label": "1.42 - 3.26 Cr"
+   },
+   "price_per_sqft": "13,400 /sqft",
+   "possession": "Under Construction (Completion in May, 2028)",
+   "configurations": {
+    "cards": [
+     {
+      "area": {
+       "unit": 1,
+       "min": 1050,
+       "max": 1320,
+       "secondaryUnit": 3,
+       "display": "1,050 - 1,320 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "97.55 - 122.63 sqm"
+      },
+      "price": {
+       "min": 14161450,
+       "max": 17954972,
+       "authentic": true,
+       "label": "1.42 - 1.8 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "2 BHK"
+      }
+     },
+     {
+      "area": {
+       "unit": 1,
+       "min": 1260,
+       "max": 1890,
+       "secondaryUnit": 3,
+       "display": "1,260 - 1,890 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "117.06 - 175.59 sqm"
+      },
+      "price": {
+       "min": 17138837,
+       "max": 25708256,
+       "authentic": true,
+       "label": "1.71 - 2.57 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "3 BHK"
+      }
+     },
+     {
+      "area": {
+       "unit": 1,
+       "min": 2250,
+       "max": 2400,
+       "secondaryUnit": 3,
+       "display": "2,250 - 2,400 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "209.03 - 222.97 sqm"
+      },
+      "price": {
+       "min": 30454000,
+       "max": 32587600,
+       "authentic": true,
+       "label": "3.05 - 3.26 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "4 BHK"
+      }
+     }
+    ]
+   },
+   "location": "Whitefield",
+   "tags": [
+    "No Brokerage",
+    "3D Floor Plans Available",
+    "+50 Top Facilities"
+   ]
+  },
+  {
+   "kind": "project",
+   "id": "403481",
+   "name": "Brigade Calista",
+   "url": "https://www.99acres.com/brigade-calista-budigere-cross-bangalore-east-npxid-r403481",
+   "developer": "Brigade Group",
+   "price_text": {
+    "min": 14000000,
+    "max": 21230207,
+    "authentic": true,
+    "label": "1.4 - 2.12 Cr"
+   },
+   "price_per_sqft": "12,150 /sqft",
+   "possession": "Under Construction (Completion in Jun, 2027)",
+   "configurations": {
+    "cards": [
+     {
+      "area": {
+       "unit": 1,
+       "min": 821,
+       "max": 858,
+       "secondaryUnit": 3,
+       "display": "821 - 858 sqft",
+       "type": {
+        "label": "Carpet Area",
+        "value": "CARPET"
+       },
+       "secondaryDisplay": "76.27 - 79.71 sqm"
+      },
+      "price": {
+       "min": 14000000,
+       "max": 14630937,
+       "authentic": true,
+       "label": "1.4 - 1.46 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "2 BHK"
+      }
+     },
+     {
+      "area": {
+       "unit": 1,
+       "min": 971,
+       "max": 1245,
+       "secondaryUnit": 3,
+       "display": "971 - 1,245 sqft",
+       "type": {
+        "label": "Carpet Area",
+        "value": "CARPET"
+       },
+       "secondaryDisplay": "90.21 - 115.66 sqm"
+      },
+      "price": {
+       "min": 16557856,
+       "max": 21230207,
+       "authentic": true,
+       "label": "1.66 - 2.12 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "3 BHK"
+      }
+     }
+    ]
+   },
+   "location": "Budigere Cross",
+   "tags": [
+    "No Brokerage",
+    "3D Floor Plans Available",
+    "+20 Top Facilities"
+   ]
+  },
+  {
+   "kind": "project",
+   "id": "444549",
+   "name": "Mahindra Blossom",
+   "url": "https://www.99acres.com/mahindra-blossom-whitefield-bangalore-east-npxid-r444549",
+   "developer": "Mahindra Lifespaces",
+   "price_text": {
+    "min": 18750000,
+    "max": 57284062,
+    "authentic": true,
+    "label": "1.88 - 5.73 Cr"
+   },
+   "price_per_sqft": "15,000 /sqft",
+   "possession": "New Launch (Completion in Oct, 2030)",
+   "configurations": {
+    "cards": [
+     {
+      "area": {
+       "unit": 1,
+       "min": 931,
+       "max": 1350,
+       "secondaryUnit": 3,
+       "display": "931 - 1,350 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "86.49 - 125.42 sqm"
+      },
+      "price": {
+       "min": 18750000,
+       "max": 21767943,
+       "authentic": true,
+       "label": "1.88 - 2.18 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "2 BHK"
+      }
+     },
+     {
+      "area": {
+       "unit": 1,
+       "min": 1313,
+       "max": 2175,
+       "secondaryUnit": 3,
+       "display": "1,313 - 2,175 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "121.98 - 202.06 sqm"
+      },
+      "price": {
+       "min": 26625000,
+       "max": 35422594,
+       "authentic": true,
+       "label": "2.66 - 3.54 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "3 BHK"
+      }
+     },
+     {
+      "area": {
+       "unit": 1,
+       "min": 1689,
+       "max": 2450,
+       "secondaryUnit": 3,
+       "display": "1,689 - 2,450 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "156.91 - 227.61 sqm"
+      },
+      "price": {
+       "min": 39490931,
+       "max": 57284062,
+       "authentic": true,
+       "label": "3.95 - 5.73 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "4 BHK"
+      }
+     }
+    ]
+   },
+   "location": "Whitefield",
+   "tags": [
+    "No Brokerage",
+    "3D Floor Plans Available",
+    "+30 Top Facilities"
+   ]
+  },
+  {
+   "kind": "project",
+   "id": "423236",
+   "name": "Prestige Somerville",
+   "url": "https://www.99acres.com/prestige-somerville-whitefield-bangalore-east-npxid-r423236",
+   "developer": "Prestige Group",
+   "price_text": {
+    "min": 22857000,
+    "max": 67317000,
+    "authentic": true,
+    "label": "2.29 - 6.73 Cr"
+   },
+   "price_per_sqft": "19,000 /sqft",
+   "possession": "Under Construction (Completion in Dec, 2027)",
+   "configurations": {
+    "cards": [
+     {
+      "area": {
+       "unit": 1,
+       "min": 1203,
+       "max": 1547,
+       "secondaryUnit": 3,
+       "display": "1,203 - 1,547 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "111.76 - 143.72 sqm"
+      },
+      "price": {
+       "min": 22857000,
+       "max": 29393000,
+       "authentic": true,
+       "label": "2.29 - 2.94 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "2 BHK"
+      }
+     },
+     {
+      "area": {
+       "unit": 1,
+       "min": 1773,
+       "max": 2724,
+       "secondaryUnit": 3,
+       "display": "1,773 - 2,724 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "164.72 - 253.07 sqm"
+      },
+      "price": {
+       "min": 33687000,
+       "max": 51756000,
+       "authentic": true,
+       "label": "3.37 - 5.18 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment & Duplex",
+       "bgColor": null,
+       "icon": null,
+       "label": "3 BHK"
+      }
+     },
+     {
+      "area": {
+       "unit": 1,
+       "min": 2616,
+       "max": 3543,
+       "secondaryUnit": 3,
+       "display": "2,616 - 3,543 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "243.03 - 329.16 sqm"
+      },
+      "price": {
+       "min": 49704000,
+       "max": 67317000,
+       "authentic": true,
+       "label": "4.97 - 6.73 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment & Duplex",
+       "bgColor": null,
+       "icon": null,
+       "label": "4 BHK"
+      }
+     }
+    ]
+   },
+   "location": "Whitefield",
+   "tags": [
+    "No Brokerage",
+    "3D Floor Plans Available",
+    "+20 Top Facilities"
+   ]
+  },
+  {
+   "kind": "project",
+   "id": "373595",
+   "name": "Sobha Windsor",
+   "url": "https://www.99acres.com/sobha-windsor-whitefield-bangalore-east-npxid-r373595",
+   "developer": "Sobha",
+   "price_text": {
+    "min": 15484000,
+    "max": 35312000,
+    "authentic": true,
+    "label": "1.55 - 3.53 Cr"
+   },
+   "price_per_sqft": "9,800 /sqft",
+   "possession": "Partially Ready To Move (Completion in Sep, 2027)",
+   "configurations": {
+    "cards": [
+     {
+      "area": {
+       "unit": 1,
+       "min": 1580,
+       "max": 1580,
+       "secondaryUnit": 3,
+       "display": "1,580 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "146.79 sqm"
+      },
+      "price": {
+       "min": 15484000,
+       "max": 23700000,
+       "authentic": true,
+       "label": "1.55 - 2.37 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "2 BHK"
+      }
+     },
+     {
+      "area": {
+       "unit": 1,
+       "min": 1550,
+       "max": 1820,
+       "secondaryUnit": 3,
+       "display": "1,550 - 1,820 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "144.0 - 169.08 sqm"
+      },
+      "price": {
+       "min": 23250000,
+       "max": 29072000,
+       "authentic": true,
+       "label": "2.33 - 2.91 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "3 BHK"
+      }
+     },
+     {
+      "area": {
+       "unit": 1,
+       "min": 2100,
+       "max": 2207,
+       "secondaryUnit": 3,
+       "display": "2,100 - 2,207 sqft",
+       "type": {
+        "label": "Super Built-up Area",
+        "value": "SUPER"
+       },
+       "secondaryDisplay": "195.1 - 205.04 sqm"
+      },
+      "price": {
+       "min": 31500000,
+       "max": 35312000,
+       "authentic": true,
+       "label": "3.15 - 3.53 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "4 BHK"
+      }
+     }
+    ]
+   },
+   "location": "Whitefield",
+   "tags": [
+    "No Brokerage",
+    "3D Floor Plans Available",
+    "+30 Top Facilities"
+   ]
+  },
+  {
+   "kind": "project",
+   "id": "473353",
+   "name": "Sattva Aangane",
+   "url": "https://www.99acres.com/sattva-aangane-budigere-cross-bangalore-east-npxid-r473353",
+   "developer": "Sattva Group",
+   "price_text": {
+    "min": 26910000,
+    "max": 77250000,
+    "authentic": true,
+    "label": "2.69 - 7.73 Cr"
+   },
+   "price_per_sqft": "15,000 /sqft",
+   "possession": "New Launch (Completion in Oct, 2032)",
+   "configurations": {
+    "cards": [
+     {
+      "area": {
+       "unit": 1,
+       "min": 1063,
+       "max": 1063,
+       "secondaryUnit": 3,
+       "display": "1,063 sqft",
+       "type": {
+        "label": "Carpet Area",
+        "value": "CARPET"
+       },
+       "secondaryDisplay": "98.76 sqm"
+      },
+      "price": {
+       "min": 27795000,
+       "max": 27795000,
+       "authentic": true,
+       "label": "2.78 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "2 BHK"
+      }
+     },
+     {
+      "area": {
+       "unit": 1,
+       "min": 1115,
+       "max": 1284,
+       "secondaryUnit": 3,
+       "display": "1,115 - 1,284 sqft",
+       "type": {
+        "label": "Carpet Area",
+        "value": "CARPET"
+       },
+       "secondaryDisplay": "103.59 - 119.29 sqm"
+      },
+      "price": {
+       "min": 26910000,
+       "max": 34665000,
+       "authentic": true,
+       "label": "2.69 - 3.47 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment",
+       "bgColor": null,
+       "icon": null,
+       "label": "3 BHK"
+      }
+     },
+     {
+      "area": {
+       "unit": 1,
+       "min": 1640,
+       "max": 3091,
+       "secondaryUnit": 3,
+       "display": "1,640 - 3,091 sqft",
+       "type": {
+        "label": "Carpet Area",
+        "value": "CARPET"
+       },
+       "secondaryDisplay": "152.36 - 287.16 sqm"
+      },
+      "price": {
+       "min": 40365000,
+       "max": 77250000,
+       "authentic": true,
+       "label": "4.04 - 7.73 Cr"
+      },
+      "configInfo": {
+       "subLabel": "Apartment & Duplex",
+       "bgColor": null,
+       "icon": null,
+       "label": "4 BHK"
+      }
+     }
+    ]
+   },
+   "location": "Budigere Cross",
+   "tags": [
+    "No Brokerage",
+    "3D Floor Plans Available",
+    "+30 Top Facilities"
+   ]
+  }
+ ],
+ "fetched_at": "2026-11-27T12:13:39.690Z",
+ "cached": true,
+ "credits_used": 1
+}

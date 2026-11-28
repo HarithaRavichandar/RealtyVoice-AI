@@ -158,6 +158,36 @@ MAPPLS_BASE_URL = os.getenv(
     "https://search.mappls.com/search",
 ).rstrip("/")
 
+# ---------------------------------------------------------------------------
+# Live property inventory (API.SH, which relays 99acres listings)
+# ---------------------------------------------------------------------------
+# Not wired into the agent yet. The key is read from the environment only.
+
+APISH_API_KEY = os.getenv("APISH_API_KEY", "").strip()
+APISH_BASE_URL = os.getenv(
+    "APISH_BASE_URL",
+    "https://api.api.sh/99acres/v1",
+).rstrip("/")
+APISH_TIMEOUT_SECONDS = _positive_int_env("APISH_TIMEOUT_SECONDS", 15)
+# Initial policy: 3 credits per conversation, subject to confirmation against
+# the API.SH plan. 0 disables live searches.
+
+
+def _non_negative_int_env(name: str, default: int) -> int:
+    raw = os.getenv(name)
+    if raw is None or not raw.strip():
+        return default
+    try:
+        value = int(raw.strip())
+    except ValueError as exc:
+        raise ValueError(f"{name} must be an integer") from exc
+    if value < 0:
+        raise ValueError(f"{name} must not be negative")
+    return value
+
+
+LIVE_CREDITS_PER_CONVERSATION = _non_negative_int_env("LIVE_CREDITS_PER_CONVERSATION", 3)
+
 __all__ = [
     "PROJECT_ROOT",
     "DATA_DIR",
@@ -186,5 +216,9 @@ __all__ = [
     "SARVAM_BASE_URL",
     "MAPPLS_API_KEY",
     "MAPPLS_BASE_URL",
+    "APISH_API_KEY",
+    "APISH_BASE_URL",
+    "APISH_TIMEOUT_SECONDS",
+    "LIVE_CREDITS_PER_CONVERSATION",
 ]
 
