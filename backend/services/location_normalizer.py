@@ -16,8 +16,10 @@ Matching rules, in order:
 1. Names are compared *squashed*: lower-cased with spaces and common
    punctuation removed, so "White Field", "white-field" and "whitefield"
    are equal.
-2. Alternate city names come from ``location_aliases.json`` (Bengaluru /
-   Bangalore, Gurugram / Gurgaon, Delhi / New Delhi, ...).
+2. Alternate city and locality names come from ``location_aliases.json``
+   (Bengaluru / Bangalore, Gurugram / Gurgaon, Delhi / New Delhi,
+   Electronic City / E-City, ...). Several aliased names in one query are
+   combined ("E-City Bengaluru" also tries "Electronic City Bangalore").
 3. A label matches exactly when the whole label, or one of its
    comma-separated parts, equals the query (or an alias spelling of it).
    So "Noida" matches ``noida`` but not ``greater-noida``, and "Patna" does
@@ -117,15 +119,19 @@ def location_variants(text: str, groups: Optional[AliasGroups] = None) -> List[s
 
     variants = [base]
     for group in _groups(groups):
-        present = [name for name in group if name in base]
-        if not present:
-            continue
-        term = max(present, key=len)  # the most specific name in the group
-        for other in group:
-            if other != term:
-                variant = base.replace(term, other)
-                if variant not in variants:
-                    variants.append(variant)
+        # Apply each group to every variant built so far, so a query that
+        # uses two aliased names ("E-City Bengaluru") still reaches the stored
+        # label ("Electronic City, Bangalore").
+        for current in list(variants):
+            present = [name for name in group if name in current]
+            if not present:
+                continue
+            term = max(present, key=len)  # the most specific name in the group
+            for other in group:
+                if other != term:
+                    variant = current.replace(term, other)
+                    if variant not in variants:
+                        variants.append(variant)
     return variants
 
 

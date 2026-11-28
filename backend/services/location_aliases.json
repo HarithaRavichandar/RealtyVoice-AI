@@ -1,5 +1,5 @@
 {
-  "_comment": "Groups of names that refer to the same Indian city. Matching treats every member of a group as equivalent (case, spaces and punctuation are ignored). To add an alias, append a name to an existing group or add a new group of two or more names. A name may appear in only one group. Aliases only help matching; they never create inventory, and suggestions are always generated from the locations actually present in the database.",
+  "_comment": "Groups of names that refer to the same Indian city or well-known locality. Matching treats every member of a group as equivalent (case, spaces and punctuation are ignored). To add an alias, append a name to an existing group or add a new group of two or more names. A name may appear in only one group. Aliases only help matching; they never create inventory, and suggestions are always generated from the locations actually present in the database.",
   "groups": [
     ["Bangalore", "Bengaluru", "Bengalooru", "Bangaluru"],
     ["Gurgaon", "Gurugram"],
@@ -26,6 +26,7 @@
     ["Shimla", "Simla"],
     ["Ahmadnagar", "Ahmednagar"],
     ["Vrindavan", "Vrindaban", "Brindavan"],
-    ["Panaji", "Panjim"]
+    ["Panaji", "Panjim"],
+    ["Electronic City", "Electronics City", "E-City"]
   ]
 }

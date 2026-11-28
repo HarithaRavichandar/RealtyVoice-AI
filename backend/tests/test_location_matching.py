@@ -514,3 +514,66 @@ def test_prompt_describes_suggestion_types():
     assert "parent_city" in SYSTEM_PROMPT
     assert "similar_name" in SYSTEM_PROMPT
     assert "availability_note" in SYSTEM_PROMPT
+
+
+# ---------------------------------------------------------------------------
+# Electronic City / E-City (roadmap task 2.4)
+#
+# The current dataset has no Electronic City label (the 93-label fixture above
+# mirrors it), so these tests use their own labels. The alias only helps match
+# labels that exist; it never creates inventory.
+# ---------------------------------------------------------------------------
+
+ECITY_LABELS = ["Electronic City, Bangalore", "Whitefield, Bangalore", "bangalore"]
+
+
+def test_electronic_city_names_share_one_alias_group():
+    groups = default_alias_groups()
+    assert any(
+        {"electroniccity", "electronicscity", "ecity"} <= set(group) for group in groups
+    )
+    assert squash("E-City") == squash("E City") == squash("ECity") == "ecity"
+
+
+@pytest.mark.parametrize(
+    "query",
+    [
+        "Electronic City",
+        "Electronics City",
+        "E-City",
+        "E City",
+        "ecity",
+        "Electronic City, Bangalore",
+        "Electronic City Bengaluru",
+        "E-City Bangalore",
+        "E-City, Bengaluru",
+        "Bengaluru E City",
+    ],
+)
+def test_electronic_city_variants_find_the_stored_label(query):
+    assert resolve_locations(query, ECITY_LABELS) == ["Electronic City, Bangalore"]
+
+
+def test_variants_combine_two_aliased_names():
+    variants = location_variants("E-City Bengaluru")
+    assert "ecitybengaluru" == variants[0]
+    assert "electroniccitybangalore" in variants
+
+
+def test_single_alias_variants_are_unchanged_by_combining():
+    assert location_variants("Whitefield, Bengaluru") == [
+        "whitefieldbengaluru",
+        "whitefieldbangalore",
+        "whitefieldbengalooru",
+        "whitefieldbangaluru",
+    ]
+
+
+def test_electronic_city_alias_does_not_match_unrelated_labels():
+    assert resolve_locations("E-City", ["Whitefield, Bangalore", "bangalore", "electricity-nagar"]) == []
+
+
+def test_without_an_electronic_city_label_nothing_is_invented(seeded):
+    # The real dataset has no such label, so searches still find nothing.
+    assert _found(seeded, "Electronic City") == set()
+    assert _found(seeded, "E-City Bengaluru") == set()
